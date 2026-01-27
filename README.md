@@ -1,1 +1,1 @@
-# ArchLinux-Hyprland
+# ArchLinux+Hyprland
