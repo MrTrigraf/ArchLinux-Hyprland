@@ -1,0 +1,168 @@
+* {
+    /* `otf-font-awesome` is required to be installed for icons */
+    font-family: JetBrainsMono, SymbolsNerdFont;
+}
+
+window#waybar {
+    background-color: rgba(42, 42, 55, 0.82);
+    transition-property: background-color;
+    transition-duration: .5s;
+    border-radius: 8;
+}
+
+window#waybar.hidden {
+    opacity: 0.5;
+}
+
+@define-color background-colour #2A2A37;
+@define-color alternate-background #1F1F28;
+@define-color ab rgba(31, 31, 40, 0.2);
+@define-color foreground-colour #C8C093;
+@define-color fc rgba(200, 192, 147, 0.85);
+@define-color inactive_tab_foreground #727169;
+@define-color itf rgba(114, 113, 105, 0.2);
+@define-color arch #7E9CD8;
+@define-color url_color #72A7BC;
+
+#workspaces {
+	background-color: rgba(31, 31, 40, 1);
+	margin: 4px 5px 4px 5px;
+	border-radius: 14;
+	border-bottom: solid 2px rgba(200, 192, 147, 0.85);
+}
+#workspaces button {
+	background-color: rgba(31, 31, 40, 0.85);
+	color: @foreground-colour;	
+	padding: 0 4px;
+	margin: 2px 5px 0 5px;
+	border-bottom: none;
+	border-radius: 0;
+}
+#workspaces button:hover {
+	background-color: rgba(31, 31, 40, 0.85);
+	color: @foreground-colour;
+	padding: 0 4px;
+	margin: 2px 5px 0 5px;
+	border-bottom: none;
+	border-radius: 4;
+}
+#workspaces button.active {
+	background-color: rgba(31, 31, 40, 0.85);
+	color: @foreground-colour;
+	padding: 0 4px;
+	margin: 2px 5px 0 5px;
+	border-bottom: solid 0px;
+	border-radius: 4;
+}
+#workspaces button.empty {
+	color: rgba(114, 113, 105, 0.85);
+	padding: 0 4px;
+	margin: 2px 5px 0 5px;
+	border-bottom: none;
+	border-radius: 8;
+}
+#workspaces button.urgent {
+    background-color: rgba(114, 113, 105, 0.85);
+    border-radius: 8;
+}
+
+#custom-rofi{
+	background-color: rgba(31, 31, 40, 0.85);
+	color: @arch;
+	padding: 0px 15px 0px 10px;
+	margin: 4px 0px 4px 10px;
+	border-radius: 6px 0px 0px 6px;
+	border-bottom: solid 2px rgba(200, 192, 147, 0.65);
+}
+
+#custom-terminal {
+	background: rgba(31, 31, 40, 0.85);
+	color: @foreground-colour;
+	padding: 6px 8px 0px 3px;
+	margin: 4px 10px 4px -5px;
+	border-radius: 0px;
+	border-bottom: solid 2px rgba(200, 192, 147, 0.65);
+}
+
+#custom-nautilus {
+	background: rgba(31, 31, 40, 0.85);
+	color: @foreground-colour;
+	padding: 6px 5px 0px 10px;
+	margin: 4px 10px 4px -15px;
+	border-radius: 0px;
+	border-bottom: solid 2px rgba(200, 192, 147, 0.65);
+}
+
+#custom-thunderbird {
+	background: rgba(31, 31, 40, 0.85);
+	color: @foreground-colour;
+	padding: 6px 5px 0px 10px;
+	margin: 4px 10px 4px -15px;
+	border-radius: 0px;
+	border-bottom: solid 2px rgba(200, 192, 147, 0.65);
+}
+
+#custom-wallpaper {
+	background: rgba(31, 31, 40, 0.85);
+	color: @foreground-colour;
+	padding: 6px 20px 0px 15px;
+	margin: 4px 0 4px -15px;
+	border-radius: 0px 6px 6px 0px;
+	border-bottom: solid 2px rgba(200, 192, 147, 0.65);
+}
+
+#custom-vpn {
+	background: rgba(31, 31, 40, 0.85);
+	font-size: 20px;
+	padding: 0 15px 0 15px;
+	margin: 4px 0 4px 0;
+	border-radius: 6 0 0 6;
+	border-bottom: solid 2px rgba(200, 192, 147, 0.65);
+}
+
+#tray{
+	background: rgba(31, 31, 40, 0.85);
+	color: @foreground-colour;
+	padding: 0px 10px 0px 10px;
+	margin: 4px 10px 4px -4px;
+	border-radius: 6px 6px 6px 6px;
+	font-size: 15px;
+	border-bottom: solid 2px rgba(200, 192, 147, 0.7);
+	
+}
+
+#custom-vpn.connected {
+	color: #76946A;
+}
+
+#custom-vpn.disconnected {
+	color: #C34043;
+}
+
+#language {
+	background: rgba(31, 31, 40, 0.85);
+	color: @foreground-colour;
+	padding: 10px;
+	margin: 4px 0px 4px -10px;
+	border-bottom: solid 2px rgba(200, 192, 147, 0.65);
+}
+
+
+#pulseaudio{
+	background: rgba(31, 31, 40, 0.85);
+	color: @foreground-colour;
+	padding: 0px 8px 0px 8px;
+	margin: 4px 0px 4px -10px;
+	font-size: 15px;
+	border-bottom: solid 2px rgba(200, 192, 147, 0.7);
+}
+
+#clock {
+	background: rgba(31, 31, 40, 0.85);
+	color: @foreground-colour;
+	padding: 0px 15px 0px 10px;
+	margin: 4px 10px 4px -4px;
+	border-radius: 0px 6px 6px 0px;
+	font-size: 15px;
+	border-bottom: solid 2px rgba(200, 192, 147, 0.7);
+}

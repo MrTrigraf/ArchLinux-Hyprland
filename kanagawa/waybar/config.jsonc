@@ -1,0 +1,121 @@
+// -*- mode: jsonc -*-
+{
+    "position": "bottom",
+    "height":24,
+    "width": 1000, 
+    "spacing": 4,
+    "margin-bottom": 8,
+
+    "modules-left": [
+        "custom/rofi",
+        "custom/terminal",
+        "custom/nautilus",
+        "custom/thunderbird",
+        "custom/wallpaper"
+    ],
+    "modules-center": [
+        "hyprland/workspaces"
+    ],
+    "modules-right": [
+      "tray",
+      "custom/vpn",
+      "hyprland/language",
+      "pulseaudio",
+        "clock"
+    ],
+
+//--- MODULES LEFT ----------------------------------------------------------------\\
+
+    "custom/rofi": {
+       "format": "<span font='22'>󰣇</span>",
+       "on-click": "exec rofi -show drun -theme ~/.config/hypr/kanagawa/rofi/menu.rasi",
+       "tooltip": false
+     },
+   
+     "custom/terminal": {
+       "format": "<span font='13'></span>",
+       "on-click": "kitty --class kitty-float --config ~/.config/hypr/kanagawa/kitty/kitty.conf",
+       "tooltip": false
+     },
+   
+     "custom/nautilus": {
+       "format": "<span font='15'>󰉋</span>",
+       "on-click": "exec nautilus",
+       "tooltip": false
+     },
+   
+     "custom/thunderbird": {
+       "format": "<span font='15'>󰊫</span>",
+       "on-click": "exec thunderbird",
+       "tooltip": false
+     },
+     
+      "custom/wallpaper": {
+       "format": "<span font='15'>󰸉</span>",
+       "on-click": "~/.config/hypr/kanagawa/rofi/wallpapermenu.sh",
+       "tooltip": false
+     },
+
+//--- MODULES CENTER -------------------------------------------------------------\\
+
+    "hyprland/workspaces": {
+		"format": "{icon}",
+		"on-click": "activate",
+		"format-icons": {
+		   "1": "<span font='16px'>󰫍</span>",
+        "2": "<span font='16px'>󰫍</span>",
+        "3": "<span font='16px'>󰫍</span>",
+        "4": "<span font='16px'>󰫍</span>",
+        "5": "<span font='16px'>󰫍</span>",
+        "active": "<span font='23px'>󰫍</span>", // Пример для активного workspace
+        "empty": "<span font='16px'>󰫍</span>"  // Пример для пустого workspace
+    },
+		"tooltip": false,
+    "persistent-workspaces": {
+                "*": 5
+    }
+	},
+
+  //--- MODULES RIGHT ------------------------------------------------------------\\
+
+
+  "tray": {
+		"icon-size": 16,
+		"spacing": 16
+	},
+
+    "custom/vpn": {
+      "format": "{}",
+      "exec": "~/.config/hypr/kanagawa/waybar/vpn.sh status",
+      "on-click": "~/.config/hypr/kanagawa/waybar/vpn.sh toggle",
+      "return-type": "json",
+      "signal": 8,
+      "interval": 10
+  },
+
+
+  "hyprland/language": {
+		"format": "{}",
+		"format-en": "EN",
+		"format-ru": "RU"
+	},
+
+   "pulseaudio": {
+		"scroll-step": 5,
+		"format": "<span color='#C8C093'>{icon}</span> {volume:>3}%",
+		"format-icons": {
+			"default": [" ", " ", " "]
+		},
+		"on-click": "pavucontrol"
+	},
+
+  "clock": {
+    "tooltip": false,
+    "tooltip-format": "<big>{:%Y %B}</big>\n<tt><small>{calendar}</small></tt>",
+    "on-click": "bash -c '~/.config/hypr/kanagawa/waybar/calendar.sh'",
+    "on-click-right": "bash -c '~/.config/hypr/kanagawa/waybar/calendar.sh --month'"
+},
+
+}
+
+   
