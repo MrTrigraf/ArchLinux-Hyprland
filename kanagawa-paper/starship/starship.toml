@@ -1,0 +1,40 @@
+# Starship prompt — kanagawa-paper
+# Целевой вид:
+#   barmaley in ~
+#   ❯
+#
+# Документация: https://starship.rs/config/
+
+# === Основной формат строки ===
+# $username     — имя пользователя ("barmaley")
+# текст "in "   — статический разделитель
+# $directory    — текущий путь ("~", "~/projects/foo")
+# $line_break   — перевод строки
+# $character    — символ приглашения (❯)
+format = """
+$username[ in ](fg:#aca9a4)$directory
+$character"""
+
+# По умолчанию starship добавляет пустую строку перед каждым приглашением — убираем.
+add_newline = false
+
+# === Имя пользователя ===
+[username]
+show_always = true            # показывать всегда, не только в SSH
+style_user = "fg:#c4b28a"     # цвет имени пользователя
+style_root = "fg:#cc928e bold" # для root — красным и жирным
+format = "[$user]($style)"     # просто имя без префиксов/иконок
+
+# === Путь ===
+[directory]
+style = "fg:#698a9b"
+format = "[$path]($style)"
+truncation_length = 3          # сокращать путь, если глубже 3 уровней
+truncation_symbol = "…/"       # символ сокращения
+truncate_to_repo = false       # не привязываться к корню git-репо
+
+# === Символ приглашения ===
+[character]
+success_symbol = "[❯](fg:#699469)"  # зелёный при успехе
+error_symbol = "[❯](fg:#cc928e)"    # красный, если предыдущая команда упала
+vicmd_symbol = "[❮](fg:#c4b28a)"    # для vi-mode (не используется, но пусть будет)
