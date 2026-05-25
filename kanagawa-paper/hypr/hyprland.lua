@@ -2,11 +2,11 @@
 ---- MODULES ----
 -----------------
 
-require("modules.keybindings")
-require("modules.env")
-require("modules.visual")
-require("modules.misc")
-require("modules.windowrules")
+require("keybindings")
+require("env")
+require("visual")
+require("misc")
+require("windowrules")
 
 ------------------
 ---- MONITORS ----
