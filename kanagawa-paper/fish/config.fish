@@ -3,6 +3,8 @@
 # Go ставится отдельно в составе nvim-bootstrap.
 fish_add_path -g ~/go/bin
 
+set -gx KITTY_CONFIG_DIRECTORY $HOME/.config/hypr/kanagawa-paper/kitty
+
 # === Промпт через starship ===
 starship init fish | source
 

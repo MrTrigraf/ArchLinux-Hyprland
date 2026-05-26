@@ -25,17 +25,8 @@ hl.monitor({
     output   = "eDP-1",
     mode     = "2160x1440@60",
     position = "auto",
-    scale    = "1.0",
+    scale    = "1.33",
 })
-
----------------------
----- MY PROGRAMS ----
----------------------
-
-local terminal    = "kitty"
-local fileManager = "nautilus"
-local browser     = "firefox"
-local menu        = "rofi -show drun"
 
 -------------------
 ---- AUTOSTART ----
