@@ -1,8 +1,20 @@
 --hyprctl clients - узнать class окон
+--hyprctl activewindow - узнать о текущем активном окне
 --------------------------------
 ---- WINDOWS AND WORKSPACES ----
 --------------------------------
 
+---- create workspace ----
+for i = 1, 5 do
+  hl.workspace_rule({
+    workspace  = tostring(i),
+    -- monitor = "HDMI-A-1"
+    persistent = true,
+    default    = (i == 3), --стартовый монитор
+  })
+end
+
+---- window rules ----
 hl.window_rule({
     name  = "suppress-maximize-events",
     match = { class = ".*" },
