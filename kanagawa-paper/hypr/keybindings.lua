@@ -48,7 +48,8 @@ hl.bind(mainMod .. " + N",          hl.dsp.exec_cmd(terminal .. " " .. ide))
 hl.bind(mainMod .. " + E",          hl.dsp.exec_cmd(fileManager))
 hl.bind(mainMod .. " + B",          hl.dsp.exec_cmd(browser))
 hl.bind(mainMod .. " + R",          hl.dsp.exec_cmd(menu))
-hl.bind(mainMod .. " + SHIFT + L",  hl.dsp.exec_cmd("hyprlock --config ~/.config/hypr/kanagawa-paper/hypr/hyprlock.conf"))
+hl.bind(mainMod .. " + SHIFT + L",  hl.dsp.exec_cmd("hyprlock --config ~/.config/hypr/kanagawa-paper/hyprlock/hyprlock.conf"))
+hl.bind(mainMod .. " + CTRL + R",   hl.dsp.exec_cmd("pkill -x quickshell; qs -p ~/.config/hypr/kanagawa-paper/quickshell"))
 ---- utils ----
 hl.bind("Print",                    hl.dsp.exec_cmd("hyprshot --mode region --clipboard-only")) --PrintScrin в буфер
 hl.bind("SHIFT + Print",            hl.dsp.exec_cmd("hyprshot --mode region --output-folder ~/Изображения")) --PrintScrin на диск
