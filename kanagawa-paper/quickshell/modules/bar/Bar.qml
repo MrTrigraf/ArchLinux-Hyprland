@@ -20,7 +20,6 @@ import "../../theme"
 //   - RightSection  → прибит к правому краю
 //   - TraySection   → прибит к ЛЕВОЙ грани RightSection и растёт влево
 //                     по мере появления tray-иконок
-//
 // Namespace "qs-bar" — для Hyprland layer-rule с blur (см. layerrules.lua).
 // ─────────────────────────────────────────────────────────────────────────────
 PanelWindow {
@@ -29,6 +28,7 @@ PanelWindow {
     // ─── Layer-shell параметры ───────────────────────────────────────────
     WlrLayershell.namespace: "qs-bar"
     WlrLayershell.layer: WlrLayer.Top
+	WlrLayershell.keyboardFocus: WlrKeyboardFocus.OnDemand
 
     // ─── Якоря layer-shell поверхности к экрану ──────────────────────────
     anchors {
@@ -51,9 +51,9 @@ PanelWindow {
     color: "transparent"
 
     // ─── Фон бара ────────────────────────────────────────────────────────
-    // Полупрозрачный sumiInk1 (alpha 0.72). Блюр под ним накладывает
-    // Hyprland через layer-rule. Верхние углы округлены, нижние — нет
-    // (бар прилипает к нижнему краю экрана).
+    // Полупрозрачный фон из палитры (alpha задаётся в Theme.background).
+    // Блюр под ним накладывает Hyprland через layer-rule. Верхние углы
+    // округлены, нижние — нет (бар прилипает к нижнему краю экрана).
     Rectangle {
         anchors.fill: parent
         color: Theme.background
@@ -61,45 +61,51 @@ PanelWindow {
         topRightRadius: Theme.barRadiusTop
         bottomLeftRadius:  0
         bottomRightRadius: 0
-        border.width: 0.5
+        border.width: 1.2
         border.color: Theme.edge
     }
 
     // ─── Контейнер содержимого с боковым padding'ом 22px ─────────────────
+    // Все секции прижаты к НИЖНЕМУ краю с одинаковым отступом
+    // Theme.sectionBottomMargin → подчёркивания всех 4 блоков
+    // на одной горизонтальной линии у самого низа бара.
     Item {
         anchors.fill: parent
         anchors.leftMargin: 22
         anchors.rightMargin: 22
 
-        // ─── Левая секция: прибита к левому краю контейнера ──────────────
+        // ─── Левая секция: прибита к левому краю ─────────────────────────
         LeftSection {
             id: leftSection
             anchors.left: parent.left
-            anchors.verticalCenter: parent.verticalCenter
+            anchors.bottom: parent.bottom
+            anchors.bottomMargin: Theme.sectionBottomMargin
         }
 
         // ─── Центральная секция: строго по центру бара ───────────────────
         CenterSection {
             id: centerSection
             anchors.horizontalCenter: parent.horizontalCenter
-            anchors.verticalCenter: parent.verticalCenter
+            anchors.bottom: parent.bottom
+            anchors.bottomMargin: Theme.sectionBottomMargin
         }
 
-        // ─── Правая секция: прибита к правому краю контейнера ────────────
+        // ─── Правая секция: прибита к правому краю ───────────────────────
         RightSection {
             id: rightSection
             anchors.right: parent.right
-            anchors.verticalCenter: parent.verticalCenter
+            anchors.bottom: parent.bottom
+            anchors.bottomMargin: Theme.sectionBottomMargin
         }
-
-        // ─── Tray-секция: прибита к ЛЕВОЙ грани правой секции ────────────
+// ─── Tray-секция: прибита к ЛЕВОЙ грани правой секции ────────────
         // Растёт справа налево по мере добавления tray-иконок.
         // В чате A — заглушка из 3 точек; в чате C — реальный SystemTray.
         TraySection {
             id: traySection
             anchors.right: rightSection.left
             anchors.rightMargin: Theme.sectionGap
-            anchors.verticalCenter: parent.verticalCenter
+            anchors.bottom: parent.bottom
+            anchors.bottomMargin: Theme.sectionBottomMargin
         }
     }
 }

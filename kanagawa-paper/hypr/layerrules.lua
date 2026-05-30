@@ -14,5 +14,5 @@
 hl.layer_rule({
     match = { namespace = "qs-bar" },
     blur = true,
-    ignore_alpha = 0.7,
+    ignore_alpha = 0.6,
 })

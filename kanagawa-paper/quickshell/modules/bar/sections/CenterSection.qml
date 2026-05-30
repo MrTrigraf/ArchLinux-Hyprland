@@ -10,66 +10,69 @@ import "../../../theme"
 // Источник данных — Quickshell.Hyprland.Hyprland (реактивный, обновляется
 // автоматически при смене ws и появлении/закрытии окон).
 //
-// Состояния пилюли (для каждого ws):
-//   active   → ширина 32px, заливка accent
-//   occupied → ширина 18px, фон inactive, точка accent в центре
-//   empty    → ширина 18px, фон inactive, без точки
-//
-// Клик по пилюле → Hyprland.dispatch("workspace N") → переключение ws.
+// Состояния пилюли:
+//   empty    → Theme.inactive  (#393836), размер 20×14
+//   occupied → Theme.occupied  (#54546D), размер 20×14
+//   active   → Theme.accent    (#b4a7b5), размер 32×14 (шире остальных)
 // ─────────────────────────────────────────────────────────────────────────────
 ColumnLayout {
     spacing: 5
 
     // ─── Ряд пилюль ──────────────────────────────────────────────────────
     RowLayout {
-        spacing: 8
+        spacing: -5  // минимальный зазор между слотами (≈ пилюли вплотную)
         Layout.alignment: Qt.AlignHCenter
 
         Repeater {
             model: 5  // 5 persistent-воркспейсов из hyprland.lua темы
 
-            Rectangle {
-                id: pill
+            Item {
+                id: pillSlot
                 required property int index
                 readonly property int wsId: index + 1
 
-                // ищем этот ws среди известных Hyprland-у (может быть undefined,
-                // если ws ещё не открывался — это нормально)
+                // ищем этот ws среди известных Hyprland-у (может быть undefined)
                 readonly property var ws: Hyprland.workspaces.values.find(w => w.id === wsId)
                 readonly property bool isActive: Hyprland.focusedWorkspace?.id === wsId
                 readonly property bool isOccupied: ws !== undefined && ws.toplevels.values.length > 0
 
-                width: isActive ? 32 : 18
-                height: 14
-                radius: 5
-                color: isActive ? Theme.accent : Theme.inactive
+                // Слот фиксированной ширины 34px вмещает и узкую (20),
+                // и широкую активную (32) пилюлю без сдвига соседей.
+                implicitWidth: 34
+                implicitHeight: 20
 
-                // ─── Точка-маркер «в ws есть окна, но он не активен» ────
+                // ─── Сама пилюля ────────────────────────────────────────
                 Rectangle {
-                    visible: pill.isOccupied && !pill.isActive
+                    id: pill
                     anchors.centerIn: parent
-                    width: 3.5
-                    height: 3.5
-                    radius: 1.75
-                    color: Theme.accent
-                }
 
-                // ─── Анимации ───────────────────────────────────────────
-                Behavior on width {
-                    NumberAnimation {
-                        duration: Theme.animMed
-                        easing.type: Easing.OutCubic
+                    // Ширина анимируется при смене активности (узкая ↔️ широкая)
+                    width: pillSlot.isActive ? 32 : 20
+                    height: 14
+                    radius: 5
+
+                    color: pillSlot.isActive
+                        ? Theme.accent
+                        : (pillSlot.isOccupied ? Theme.occupied : Theme.inactive)
+
+                    Behavior on width {
+                        NumberAnimation {
+                            duration: Theme.animMed
+                            easing.type: Easing.OutCubic
+                        }
+                    }
+                    Behavior on color {
+                        ColorAnimation { duration: Theme.animFast }
                     }
                 }
-                Behavior on color {
-                    ColorAnimation { duration: Theme.animFast }
-                }
 
-                // ─── Клик → переключение воркспейса ─────────────────────
+                // ─── Хитбокс на весь слот (34×20) ───────────────────────
                 MouseArea {
                     anchors.fill: parent
                     cursorShape: Qt.PointingHandCursor
-                    onClicked: Hyprland.dispatch("workspace " + pill.wsId)
+                    onClicked: {
+                        Hyprland.dispatch('hl.dsp.exec_raw("workspace, ' + pillSlot.wsId + '")')
+                    }
                 }
             }
         }

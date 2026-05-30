@@ -8,8 +8,8 @@ import QtQuick
 // ─────────────────────────────────────────────────────────────────────────────
 QtObject {
     // ─── Surface (поверхность бара и попапов) ──────────────────────────────
-    readonly property color background:  Qt.rgba(0x1F/255, 0x1F/255, 0x28/255, 0.92)
-    readonly property color edge:        Qt.rgba(0xDC/255, 0xD7/255, 0xBA/255, 0.28)
+    readonly property color background:  Qt.rgba(0x2A/255, 0x2A/255, 0x37/255, 0.85)
+    readonly property color edge:        Qt.rgba(0xDC/255, 0xD7/255, 0xBA/255, 0.30)
     readonly property color shadow:      Qt.rgba(0, 0, 0, 0.30)
 
     // ─── Text / icons ──────────────────────────────────────────────────────
@@ -18,7 +18,8 @@ QtObject {
     readonly property color fgMuted:     "#9e9b93"   // disabled / разделители
 
     // ─── Inactive (пустые элементы, фоны контейнеров) ──────────────────────
-    readonly property color inactive:    "#393836"   // пустые ws-пилюли
+	readonly property color inactive:    "#393836"   // пустые ws-пилюли
+	readonly property color occupied:    "#54546D"   // ws-пилюли с откртыми окнами
     readonly property color inactiveAlt: "#2A2A37"   // tray-подложка и т.п.
 
     // ─── Accent (приглушённая лаванда, color13 kanagawa-paper ink) ─────────
@@ -48,6 +49,7 @@ QtObject {
     readonly property int    iconGap:       14        // расстояние между иконками внутри группы
     readonly property int    sectionPaddingH: 0       // горизонтальный padding внутри группы
     readonly property int    underlineHeight: 2       // толщина подчёркивания
+	readonly property int    sectionBottomMargin: 4   // отступ секции от низа бара
 
     // ─── Анимации ──────────────────────────────────────────────────────────
     readonly property int    animFast:      150       // hover / простые переходы
