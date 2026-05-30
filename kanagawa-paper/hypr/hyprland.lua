@@ -7,6 +7,7 @@ require("env")
 require("visual")
 require("misc")
 require("windowrules")
+require("layerrules")
 
 ------------------
 ---- MONITORS ----
@@ -37,8 +38,8 @@ hl.on("hyprland.start", function ()
   hl.exec_cmd("systemctl --user start hyprpolkitagent")
   hl.exec_cmd("awww-daemon")
   hl.exec_cmd("hypridle")
-  hl.exec_cmd("hyprlock --config ~/.config/hypr/kanagawa-paper/hyprlock/hyprlock.conf")
   hl.exec_cmd("qs -p ~/.config/hypr/kanagawa-paper/quickshell")
+  hl.exec_cmd("hyprlock --config ~/.config/hypr/kanagawa-paper/hyprlock/hyprlock.conf")
 end)
 
 ---------------

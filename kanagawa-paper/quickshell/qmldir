@@ -1,5 +1,0 @@
-singleton Colors Colors.qml
-LeftBlock LeftBlock.qml
-CenterBlock CenterBlock.qml
-RightBlock RightBlock.qml
-PowerMenuContent PowerMenuContent.qml
