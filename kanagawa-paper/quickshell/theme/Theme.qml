@@ -18,8 +18,8 @@ QtObject {
     readonly property color fgMuted:     "#9e9b93"   // disabled / разделители
 
     // ─── Inactive (пустые элементы, фоны контейнеров) ──────────────────────
-	readonly property color inactive:    "#393836"   // пустые ws-пилюли
-	readonly property color occupied:    "#54546D"   // ws-пилюли с откртыми окнами
+	readonly property color inactive:    "#4A4955"   // пустые ws-пилюли
+	readonly property color occupied:    "#6E6E92"   // ws-пилюли с откртыми окнами
     readonly property color inactiveAlt: "#2A2A37"   // tray-подложка и т.п.
 
     // ─── Accent (приглушённая лаванда, color13 kanagawa-paper ink) ─────────
@@ -49,7 +49,7 @@ QtObject {
     readonly property int    iconGap:       14        // расстояние между иконками внутри группы
     readonly property int    sectionPaddingH: 0       // горизонтальный padding внутри группы
     readonly property int    underlineHeight: 2       // толщина подчёркивания
-	readonly property int    sectionBottomMargin: 4   // отступ секции от низа бара
+	readonly property int    sectionBottomMargin: 5   // отступ секции от низа бара
 
     // ─── Анимации ──────────────────────────────────────────────────────────
     readonly property int    animFast:      150       // hover / простые переходы
@@ -70,5 +70,25 @@ QtObject {
 
     // Цвет текста на accent-фоне (hover/focus пункта). Тёмный тон kanagawa-paper,
     // читаемо на лавандовом #b4a7b5. Если в будущем accent сменится — поправить здесь.
-    readonly property color  popupItemHoverFg:    "#1F1F28"
+	readonly property color  popupItemHoverFg:    "#1F1F28"
+	readonly property color sectionBg: Qt.alpha("#363646", 0.96)
+
+	readonly property int sectionPillRadius: 10
+	readonly property int sectionPillPaddingH: 8
+	readonly property int sectionPillPaddingV: 5
+
+	// ─── Wallpaper picker ───────────────────────────────────────────────
+    readonly property int  wallpaperPreviewW:        170
+    readonly property int  wallpaperPreviewH:        96   // 16:9 (170/16*9 ≈ 96)
+    readonly property int  wallpaperPreviewGap:      10
+    readonly property int  wallpaperPreviewRadius:   8
+
+    // Рамка выделения selected-превью. accent (#b4a7b5) - тот же визуальный
+    // язык, что и hover в PowerMenu и активная пилюля workspace.
+    readonly property int   wallpaperSelectedBorderW: 2
+
+    // Высоты строк попапа.
+    readonly property int  wallpaperLabelHeight:     22
+    readonly property int  wallpaperArrowSize:       28
+    readonly property int  wallpaperRowGap:          12  // вертикальный gap между рядом превью/label/стрелки
 }

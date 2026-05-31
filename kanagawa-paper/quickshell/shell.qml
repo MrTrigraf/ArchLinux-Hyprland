@@ -1,5 +1,6 @@
 import QtQuick
 import Quickshell
+import Quickshell.Io
 import "./modules/bar"
 import "./modules/popups"
 
@@ -35,7 +36,15 @@ Variants {
                 powerMenu.parentBar = bar
                 powerMenu.anchorX = iconLocalX - 22
                 PopupManager.toggle(powerMenu)
-            }
+			}
+
+			onLeftTerminalClicked: (iconLocalX) => {
+				terminakProc.startDetached()
+			}
+
+			onLeftFilesClicked: (iconLocalX) => {
+				fileProc.startDetached()
+			}
 
             // terminal/folder/wallpaper подключим в следующих шагах чата B.
         }
@@ -43,6 +52,12 @@ Variants {
         // ─── Попап питания ──────────────────────────────────────────────
         // Стартует невидимым. parentBar и anchorX выставляются в обработчике
         // onLeftPowerClicked перед toggle().
-        property PowerMenu powerMenu: PowerMenu {}
+		property PowerMenu powerMenu: PowerMenu {}
+		property Process terminakProc: Process {
+			command: ["kitty", "--class", "floating-kitty"]
+		}
+		property Process fileProc: Process {
+			command: ["nautilus"]
+		}
     }
 }

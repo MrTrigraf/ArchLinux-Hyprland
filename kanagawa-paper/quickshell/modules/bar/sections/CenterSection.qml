@@ -1,52 +1,56 @@
 import QtQuick
 import QtQuick.Layouts
 import Quickshell.Hyprland
+import Quickshell.Widgets
 import "../components"
 import "../../../theme"
 
-// ─────────────────────────────────────────────────────────────────────────────
-// CenterSection — индикаторы воркспейсов 1..5 (пилюли).
+// CenterSection - индикаторы воркспейсов 1..5 внутри плашки-капсулы.
 //
-// Источник данных — Quickshell.Hyprland.Hyprland (реактивный, обновляется
-// автоматически при смене ws и появлении/закрытии окон).
+// Источник данных - Quickshell.Hyprland.Hyprland (реактивный).
 //
 // Состояния пилюли:
-//   empty    → Theme.inactive  (#393836), размер 20×14
-//   occupied → Theme.occupied  (#54546D), размер 20×14
-//   active   → Theme.accent    (#b4a7b5), размер 32×14 (шире остальных)
-// ─────────────────────────────────────────────────────────────────────────────
-ColumnLayout {
-    spacing: 5
+//   empty    -> Theme.inactive  (#393836), размер 20x14
+//   occupied -> Theme.occupied  (#54546D), размер 20x14
+//   active   -> Theme.accent    (#b4a7b5), размер 32x14 (шире остальных)
+//
+// Визуально: ряд пилюль обёрнут в WrapperRectangle (Theme.sectionBg)
+// с большим radius. Плашка плотно по содержимому.
 
-    // ─── Ряд пилюль ──────────────────────────────────────────────────────
+WrapperRectangle {
+    id: root
+
+    resizeChild: false
+    leftMargin:   Theme.sectionPillPaddingH
+    rightMargin:  Theme.sectionPillPaddingH
+    topMargin:    Theme.sectionPillPaddingV
+    bottomMargin: Theme.sectionPillPaddingV
+
+    color: Theme.sectionBg
+    radius: Theme.sectionPillRadius
+
     RowLayout {
-        spacing: -5  // минимальный зазор между слотами (≈ пилюли вплотную)
-        Layout.alignment: Qt.AlignHCenter
+        spacing: -5   // минимальный зазор между слотами (пилюли вплотную)
 
         Repeater {
-            model: 5  // 5 persistent-воркспейсов из hyprland.lua темы
+            model: 5
 
             Item {
                 id: pillSlot
                 required property int index
                 readonly property int wsId: index + 1
 
-                // ищем этот ws среди известных Hyprland-у (может быть undefined)
                 readonly property var ws: Hyprland.workspaces.values.find(w => w.id === wsId)
                 readonly property bool isActive: Hyprland.focusedWorkspace?.id === wsId
                 readonly property bool isOccupied: ws !== undefined && ws.toplevels.values.length > 0
 
-                // Слот фиксированной ширины 34px вмещает и узкую (20),
-                // и широкую активную (32) пилюлю без сдвига соседей.
                 implicitWidth: 34
                 implicitHeight: 20
 
-                // ─── Сама пилюля ────────────────────────────────────────
                 Rectangle {
                     id: pill
                     anchors.centerIn: parent
 
-                    // Ширина анимируется при смене активности (узкая ↔️ широкая)
                     width: pillSlot.isActive ? 32 : 20
                     height: 14
                     radius: 5
@@ -66,7 +70,6 @@ ColumnLayout {
                     }
                 }
 
-                // ─── Хитбокс на весь слот (34×20) ───────────────────────
                 MouseArea {
                     anchors.fill: parent
                     cursorShape: Qt.PointingHandCursor
@@ -77,11 +80,5 @@ ColumnLayout {
             }
         }
     }
-
-    // ─── Подчёркивание секции ────────────────────────────────────────────
-    SectionUnderline {
-        Layout.fillWidth: true
-        Layout.leftMargin: Theme.sectionPaddingH
-        Layout.rightMargin: Theme.sectionPaddingH
-    }
 }
+

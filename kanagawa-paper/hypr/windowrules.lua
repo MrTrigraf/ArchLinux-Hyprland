@@ -43,3 +43,18 @@ hl.window_rule({
     float = true,
 })
 
+hl.window_rule({
+  name   = "bar-floating-kitty",
+  match  = { class = "^floating-kitty$" },
+  float  = true,
+  size   ={"(monitor_w*0.6)", "(monitor_h*0.65)"},
+  center = true,
+})
+
+hl.window_rule({
+  name   = "nautilus",
+  match  = { class = "^(org.gnome.Nautilus|nautilus)$" },
+  float  = true,
+  size   = {"(monitor_w*0.6)", "(monitor_h*0.65)"},
+  center = true,
+})

@@ -1,20 +1,37 @@
 import QtQuick
 import QtQuick.Layouts
+import Quickshell.Widgets
 import "../components"
 import "../../../components"
 import "../../../theme"
 
-// LeftSection - левый блок бара: 4 иконки + подчёркивание.
+// LeftSection - левый блок бара: 4 иконки внутри плашки-капсулы.
 //
 // Иконки:
 //   power_settings_new -> сигнал powerClicked  -> PowerMenu
 //   terminal           -> сигнал terminalClicked  -> плавающий kitty
 //   folder             -> сигнал filesClicked     -> плавающий nautilus
 //   wallpaper          -> сигнал wallpaperClicked -> WallpaperPicker
+//
+// Визуально: ряд иконок обёрнут в WrapperRectangle (Theme.sectionBg =
+// #363646) с большим radius (Theme.sectionPillRadius). Плашка
+// автоматически подгоняется под содержимое + padding'и из Theme.
 
-ColumnLayout {
+WrapperRectangle {
     id: root
-    spacing: 5
+
+    // ─── Геометрия плашки ───────────────────────────────────────────────
+    // resizeChild=false: плашка плотно по implicit-размеру содержимого,
+    // не растягивается даже если родитель больше. Это даёт "капсулу
+    // по иконкам", а не плашку во всю ширину секции.
+    resizeChild: false
+    leftMargin:   Theme.sectionPillPaddingH
+    rightMargin:  Theme.sectionPillPaddingH
+    topMargin:    Theme.sectionPillPaddingV
+    bottomMargin: Theme.sectionPillPaddingV
+
+    color: Theme.sectionBg
+    radius: Theme.sectionPillRadius
 
     // Ссылка на корневое окно бара. Выставляется из Bar.qml.
     // Нужна для mapToItem - чтобы получить X иконки в координатах окна бара.
@@ -26,11 +43,11 @@ ColumnLayout {
     signal filesClicked(int iconLocalX)
     signal wallpaperClicked(int iconLocalX)
 
-    // ─── Ряд иконок ─────────────────────────────────────────────────────
+    // ─── Ряд иконок (child WrapperRectangle) ────────────────────────────
+    // WrapperRectangle оборачивает ОДИН child Item, его размер становится
+    // размером плашки + margins. Поэтому RowLayout - единственный потомок.
     RowLayout {
-        id: iconRow
         spacing: Theme.iconGap
-        Layout.alignment: Qt.AlignHCenter | Qt.AlignBottom
 
         Repeater {
             model: [
@@ -69,20 +86,10 @@ ColumnLayout {
                     }
                 }
 
-                // HoverHandler для cursor shape - TapHandler сам не меняет
-                // курсор. Это отдельный лёгкий PointerHandler, без логики.
                 HoverHandler {
                     cursorShape: Qt.PointingHandCursor
                 }
-
             }
         }
-    }
-
-    // ─── Подчёркивание секции ───────────────────────────────────────────
-    SectionUnderline {
-        Layout.fillWidth: true
-        Layout.leftMargin: Theme.sectionPaddingH
-        Layout.rightMargin: Theme.sectionPaddingH
     }
 }

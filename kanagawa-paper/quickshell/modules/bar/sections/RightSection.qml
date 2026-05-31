@@ -1,10 +1,10 @@
 import QtQuick
 import QtQuick.Layouts
+import Quickshell.Widgets
 import "../components"
 import "../../../theme"
 
-// ─────────────────────────────────────────────────────────────────────────────
-// RightSection — системный блок (всегда виден, прибит к правому краю бара).
+// RightSection - системный блок (часы) внутри плашки-капсулы.
 //
 // В чате A содержит только часы HH:MM.
 // В чате C сюда придут: layout-indicator (EN/RU) + volume (% + popup-слайдер).
@@ -12,14 +12,21 @@ import "../../../theme"
 // На ноуте также: battery (модуль появляется только при наличии аккумулятора).
 //
 // Tray вынесен в отдельный блок TraySection (см. Bar.qml).
-// ─────────────────────────────────────────────────────────────────────────────
-ColumnLayout {
-    spacing: 5
 
-    // ─── Ряд содержимого ─────────────────────────────────────────────────
+WrapperRectangle {
+    id: root
+
+    resizeChild: false
+    leftMargin:   Theme.sectionPillPaddingH
+    rightMargin:  Theme.sectionPillPaddingH
+    topMargin:    Theme.sectionPillPaddingV
+    bottomMargin: Theme.sectionPillPaddingV
+
+    color: Theme.sectionBg
+    radius: Theme.sectionPillRadius
+
     RowLayout {
         spacing: Theme.iconGap
-        Layout.alignment: Qt.AlignHCenter
 
         // Часы: HH:MM (без секунд, без AM/PM)
         Text {
@@ -38,12 +45,5 @@ ColumnLayout {
                 onTriggered: clock.text = Qt.formatDateTime(new Date(), "HH:mm")
             }
         }
-    }
-
-    // ─── Подчёркивание секции ────────────────────────────────────────────
-    SectionUnderline {
-        Layout.fillWidth: true
-        Layout.leftMargin: Theme.sectionPaddingH
-        Layout.rightMargin: Theme.sectionPaddingH
     }
 }
