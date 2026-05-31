@@ -40,9 +40,12 @@ PopupBase {
     property int focusedIndex: 0
 
     // При открытии — сбрасываем фокус на первый пункт.
-    onIsOpenChanged: {
-        if (isOpen) focusedIndex = 0
-    }
+	Connections {
+		target: root
+		function onIsOpenChanged() {
+			if (root.isOpen) root.focusedIndex = 0
+		}
+	}
 
     // ─── Процессы для выполнения действий ────────────────────────────────
     // Quickshell.Io.Process — асинхронный запуск команд. Lock дёргаем через

@@ -36,7 +36,7 @@ PanelWindow {
     // ─── Layer-shell параметры ───────────────────────────────────────────
     WlrLayershell.namespace: "qs-bar"
     WlrLayershell.layer: WlrLayer.Top
-	WlrLayershell.keyboardFocus: WlrKeyboardFocus.OnDemand
+	WlrLayershell.keyboardFocus: WlrKeyboardFocus.None
 
     // ─── Якоря layer-shell поверхности к экрану ──────────────────────────
     anchors {

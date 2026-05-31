@@ -39,7 +39,6 @@ PopupWindow {
     anchor.rect.y: -contentHeight - 1
     anchor.rect.width: 1
 	anchor.rect.height: 1
-    anchor.edges: Edges.Top | Edges.Right
 
     // ─── Размер окна попапа ─────────────────────────────────────────────
     // width/height в PopupWindow deprecated - используется implicit*.
@@ -52,7 +51,7 @@ PopupWindow {
     // ─── Видимость ──────────────────────────────────────────────────────
     // Окно появляется, когда isOpen=true. Анимация закрытия задерживает
     // фактическое скрытие: visible остаётся true пока closeAnim бежит.
-    visible: isOpen || closeAnim.running
+    visible: isOpen || bg.opacity > 0
 
     // ─── HyprlandFocusGrab: click-outside + keyboard focus ──────────────
     // active=true пока попап видим. windows=[root] - фокус удерживается
@@ -60,7 +59,7 @@ PopupWindow {
     // закрывает попап.
 	HyprlandFocusGrab {
         id: grab
-        windows: root.parentBar ? [ root, root.parentBar ] : [ root ]
+        windows: [ root ]
         active: root.isOpen
         onCleared: root.close()
     }
@@ -86,9 +85,9 @@ PopupWindow {
 
         // ─── Анимация opacity + Y-сдвиг ─────────────────────────────────
         opacity: 0
-        transform: Translate { id: slideTr; y: Theme.popupSlideOffset }
 
-        Behavior on opacity {
+		Behavior on opacity {
+			id: opacityBehavior
             NumberAnimation {
                 duration: Theme.animMed
                 easing.type: Easing.OutCubic
@@ -96,38 +95,16 @@ PopupWindow {
         }
     }
 
-    NumberAnimation {
-        id: openAnim
-        target: slideTr
-        property: "y"
-        from: Theme.popupSlideOffset
-        to: 0
-        duration: Theme.animMed
-        easing.type: Easing.OutCubic
-    }
-
-    NumberAnimation {
-        id: closeAnim
-        target: slideTr
-        property: "y"
-        from: 0
-        to: Theme.popupSlideOffset
-        duration: Theme.animMed
-        easing.type: Easing.OutCubic
-    }
-
     // ─── Реакция на смену isOpen ────────────────────────────────────────
     onIsOpenChanged: {
         if (isOpen) {
             bg.opacity = 1
-            openAnim.start()
             Qt.callLater(function() {
                 root.requestActivate()
                 contentHolder.forceActiveFocus()
             })
         } else {
             bg.opacity = 0
-            closeAnim.start()
             PopupManager.notifyClosed(root)
         }
     }
@@ -137,12 +114,11 @@ PopupWindow {
     function close()  { if (isOpen) { isOpen = false } }
     function toggle() { isOpen = !isOpen }
 	function closeImmediate() {
-        if (!isOpen && !closeAnim.running) return
-        closeAnim.stop()                          // прерываем анимацию
-        openAnim.stop()                           // на всякий случай
-        bg.opacity = 0                            // мгновенно прозрачный
-        slideTr.y = Theme.popupSlideOffset        // возврат translate
-        isOpen = false                            // visible = false мгновенно
-        PopupManager.notifyClosed(root)
+        if (!isOpen) return
+        opacityBehavior.enabled = false
+		bg.opacity = 0                            // мгновенно прозрачный
+		opacityBehavior.enabled = true
+		isOpen = false
+		PopupManager.notifyClosed(root)
     }
 }
