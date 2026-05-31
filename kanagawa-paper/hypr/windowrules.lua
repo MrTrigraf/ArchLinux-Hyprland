@@ -10,7 +10,7 @@ for i = 1, 5 do
     workspace  = tostring(i),
     -- monitor = "HDMI-A-1"
     persistent = true,
-    default    = (i == 3), --стартовый монитор
+    default    = (i == 1), --стартовый монитор
   })
 end
 

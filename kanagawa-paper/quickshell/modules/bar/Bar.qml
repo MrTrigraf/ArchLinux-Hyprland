@@ -24,6 +24,14 @@ import "../../theme"
 // ─────────────────────────────────────────────────────────────────────────────
 PanelWindow {
     id: bar
+	// ─── Сигналы наружу делегата ─────────────────────────────────────────
+    // Bar — это PanelWindow. Прокидывает клики по иконкам LeftSection
+    // наверх в shell.qml, который превращает их в открытие попапов.
+    // Параметр iconLeftX — глобальные координаты левого края иконки.
+    signal leftPowerClicked(int iconLeftX)
+    signal leftTerminalClicked(int iconLeftX)
+    signal leftFilesClicked(int iconLeftX)
+	signal leftWallpaperClicked(int iconLeftX)
 
     // ─── Layer-shell параметры ───────────────────────────────────────────
     WlrLayershell.namespace: "qs-bar"
@@ -80,6 +88,14 @@ PanelWindow {
             anchors.left: parent.left
             anchors.bottom: parent.bottom
             anchors.bottomMargin: Theme.sectionBottomMargin
+
+			barWindow: bar
+
+            // Реэмитим клики наружу делегата — в shell.qml.
+            onPowerClicked:     (x) => bar.leftPowerClicked(x)
+            onTerminalClicked:  (x) => bar.leftTerminalClicked(x)
+            onFilesClicked:     (x) => bar.leftFilesClicked(x)
+            onWallpaperClicked: (x) => bar.leftWallpaperClicked(x)
         }
 
         // ─── Центральная секция: строго по центру бара ───────────────────

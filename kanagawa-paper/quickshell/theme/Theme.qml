@@ -53,5 +53,22 @@ QtObject {
 
     // ─── Анимации ──────────────────────────────────────────────────────────
     readonly property int    animFast:      150       // hover / простые переходы
-    readonly property int    animMed:       250       // открытие попапов
+	readonly property int    animMed:       250       // открытие попапов
+
+	// ─── Попапы ────────────────────────────────────────────────────────────
+    // Геометрия и стили общие для всех попапов, выезжающих над баром.
+    // Используется PopupBase.qml и его наследниками (PowerMenu, WallpaperPicker, ...).
+    readonly property int    popupRadius:         14    // все 4 угла, = barRadiusTop
+    readonly property int    popupContentPadding: 8     // внутренний отступ от рамки до пунктов
+    readonly property int    popupItemHeight:     36    // высота одного пункта меню
+    readonly property int    popupItemPaddingH:   14    // горизонтальный отступ внутри пункта
+    readonly property int    popupItemRadius:     8     // закругление плашки hover/focus пункта
+    readonly property int    popupIconGap:        12    // расстояние "иконка ↔️ лейбл" в пункте
+    readonly property int    iconSizePopupItem:   18    // размер иконки в пункте меню
+    readonly property int    fontSizePopupItem:   13    // размер шрифта лейбла пункта
+    readonly property int    popupSlideOffset:    12    // сдвиг по Y для slide-up анимации
+
+    // Цвет текста на accent-фоне (hover/focus пункта). Тёмный тон kanagawa-paper,
+    // читаемо на лавандовом #b4a7b5. Если в будущем accent сменится — поправить здесь.
+    readonly property color  popupItemHoverFg:    "#1F1F28"
 }

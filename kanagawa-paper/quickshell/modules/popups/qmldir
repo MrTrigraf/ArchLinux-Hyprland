@@ -1,0 +1,4 @@
+module popups
+PopupBase 1.0 PopupBase.qml
+PowerMenu 1.0 PowerMenu.qml
+singleton PopupManager 1.0 PopupManager.qml
