@@ -1,4 +1,6 @@
 module popups
 PopupBase 1.0 PopupBase.qml
 PowerMenu 1.0 PowerMenu.qml
+WallpaperPicker 1.0 WallpaperPicker.qml
 singleton PopupManager 1.0 PopupManager.qml
+singleton WallpaperModel 1.0 WallpaperModel.qml

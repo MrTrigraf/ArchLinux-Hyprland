@@ -31,3 +31,8 @@ hl.env("MOZ_ENABLE_WAYLAND", "1")
 ---- Laptop ----
 hl.env("LIBVA_DRIVER_NAME", "iHD")
 hl.env("VDPAU_DRIVER", "va_gl") --нужен пакет libvdpau-va-gl
+
+---- awww ----
+hl.env("AWWW_TRANSITION", "fade")
+hl.env("AWWW_TRANSITION_DURATION", "3")
+hl.env("AWWW_TRANSITION_FPS", "60")

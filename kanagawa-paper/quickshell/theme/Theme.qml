@@ -81,7 +81,7 @@ QtObject {
     readonly property int  wallpaperPreviewW:        170
     readonly property int  wallpaperPreviewH:        96   // 16:9 (170/16*9 ≈ 96)
     readonly property int  wallpaperPreviewGap:      10
-    readonly property int  wallpaperPreviewRadius:   8
+    readonly property int  wallpaperPreviewRadius:   4
 
     // Рамка выделения selected-превью. accent (#b4a7b5) - тот же визуальный
     // язык, что и hover в PowerMenu и активная пилюля workspace.
@@ -90,5 +90,5 @@ QtObject {
     // Высоты строк попапа.
     readonly property int  wallpaperLabelHeight:     22
     readonly property int  wallpaperArrowSize:       28
-    readonly property int  wallpaperRowGap:          12  // вертикальный gap между рядом превью/label/стрелки
+    readonly property int  wallpaperRowGap:          4  // вертикальный gap между рядом превью/label/стрелки
 }

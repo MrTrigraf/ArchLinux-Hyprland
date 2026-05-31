@@ -46,13 +46,19 @@ Variants {
 				fileProc.startDetached()
 			}
 
-            // terminal/folder/wallpaper подключим в следующих шагах чата B.
+			onLeftWallpaperClicked: (iconLocalX) => {
+				wallpaperPicker.parentBar = bar
+				wallpaperPicker.contentWidth = bar.width
+				wallpaperPicker.anchorX = 0
+				PopupManager.toggle(wallpaperPicker)
+			}
         }
 
         // ─── Попап питания ──────────────────────────────────────────────
         // Стартует невидимым. parentBar и anchorX выставляются в обработчике
         // onLeftPowerClicked перед toggle().
 		property PowerMenu powerMenu: PowerMenu {}
+		property WallpaperPicker wallpaperPicker: WallpaperPicker {}
 		property Process terminakProc: Process {
 			command: ["kitty", "--class", "floating-kitty"]
 		}
