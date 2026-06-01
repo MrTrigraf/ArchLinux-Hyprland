@@ -91,4 +91,84 @@ QtObject {
     readonly property int  wallpaperLabelHeight:     22
     readonly property int  wallpaperArrowSize:       28
     readonly property int  wallpaperRowGap:          4  // вертикальный gap между рядом превью/label/стрелки
+
+	// ─── System Tray ───────────────────────────────────────────────────
+    // Размеры и анимация для иконок системного трея (TraySection.qml).
+    readonly property int  trayIconSize:        18   // размер одной tray-иконки
+    readonly property int  trayIconGap:         10   // расстояние между иконками
+    readonly property int  trayAppearDuration:  220  // длительность fade+scale при появлении
+	readonly property real trayAppearScaleFrom: 0.8  // начальный scale (0..1)
+
+	// ─── Keyboard layout indicator ─────────────────────────────────────
+    // Индикатор раскладки EN/RU в RightSection. Двухбуквенный код в
+    // моноширинном шрифте, ширина фиксирована — чтобы переключение
+    // EN-RU не двигало соседние элементы.
+    readonly property int  layoutIndicatorWidth:    22    // фиксированная ширина блока
+    readonly property int  layoutIndicatorFontSize: 16    // размер шрифта кода
+    readonly property color layoutIndicatorFg:      fg    // основной цвет
+	readonly property color layoutIndicatorFgHover: accent // при hover
+
+    // ─── Clock slot ─────────────────────────────────────────────────────
+    // Фиксированная ширина слота часов в RightSection. JetBrains Mono
+    // в pixelSize 16 даёт глиф ~10px; "HH:mm" = 5 символов ≈ 50px.
+    // Берём 52 — с минимальным запасом, чтобы text не клипался.
+    readonly property int clockSlotWidth: 52
+
+    // ─── Calendar popup ─────────────────────────────────────────────────
+    // Геометрия и стили попапа календаря (CalendarPopup.qml).
+    readonly property int calCellSize:       30   // размер одной ячейки даты
+    readonly property int calHeaderHeight:   32   // высота шапки с месяцем
+    readonly property int calDowHeight:      22   // высота строки дней недели
+    readonly property int calFontSize:       14   // размер шрифта дат
+    readonly property int calHeaderFontSize: 18   // размер шрифта названия месяца
+    readonly property int calNavIconSize:    18   // размер стрелок ‹ ›
+    readonly property int calRowGap:         2    // вертикальный gap между шапкой/dow/датами
+
+    // Цвета для календаря.
+    readonly property color calHeaderFg:     fg          // название месяца
+    readonly property color calDowFg:        fgSubtle    // дни недели (Пн Вт Ср ...)
+    readonly property color calDayFg:        fg          // обычная дата текущего месяца
+    readonly property color calDayOtherFg:   fgMuted     // дата соседнего месяца (приглушённая)
+    readonly property color calTodayBg:      accent      // фон сегодняшнего дня
+    readonly property color calTodayFg:      popupItemHoverFg  // текст сегодняшнего дня
+    readonly property color calNavFg:        fg
+    readonly property color calNavFgHover:   accent
+
+	// ─── Volume indicator (RightSection) ────────────────────────────────
+    // Размер совпадает с iconSizeBar (22) — основной "ритм" иконок бара.
+    // Скролл-шаг в долях единицы (0.01 = 1%).
+    readonly property int  volumeIconSize:   Theme.iconSizeBar  // 22
+    readonly property real volumeScrollStep: 0.01               // ±1% за щелчок
+
+    // ─── Volume slider (компонент VolumeSlider.qml) ─────────────────────
+    // Горизонтальный слайдер с подписью сверху и значением справа.
+    // Структура:
+    //   ┌─────────────────────────────┐
+    //   │ Подпись               42%   │  ← labelRow
+    //   │ ━━━━━━━━━━●━━━━━━━━━━━━━━━━ │  ← track + handle
+    //   └─────────────────────────────┘
+    readonly property int volumeSliderTrackHeight: 4    // толщина "рельса"
+    readonly property int volumeSliderHandleSize:  14   // диаметр кругляшка
+    readonly property int volumeSliderLabelGap:    6    // gap между подписью и треком
+    readonly property int volumeSliderRowGap:      12   // gap между слайдерами в попапе
+    readonly property int volumeSliderLabelSize:   12   // размер шрифта подписи и %
+
+    // Цвета слайдера.
+    readonly property color volumeSliderLabelFg:  fg               // подпись
+    readonly property color volumeSliderValueFg:  fgSubtle         // "42%"
+    readonly property color volumeSliderTrackBg:  fgMuted          // незаполненная часть рельса
+    readonly property color volumeSliderTrackFg:  accent           // заполненная часть рельса
+    readonly property color volumeSliderHandleBg: accent           // кругляшек
+    readonly property color volumeSliderHandleBgMuted: fgSubtle    // кругляшек при mute
+    readonly property color volumeSliderTrackFgMuted:  fgMuted     // заполнение при mute
+
+    // ─── Volume popup ───────────────────────────────────────────────────
+    // Ширина попапа. 260px достаточно для подписи приложения + значения
+    // справа без обрезки на типичных именах ("Discord", "Mozilla Firefox",
+    // "Spotify"). Если попадётся "Telegram Desktop — Saved Messages" —
+    // обрежется через elide; терпимо.
+    readonly property int volumePopupWidth:    260
+    readonly property int volumePopupRowGap:   volumeSliderRowGap   // gap между слайдерами
+    readonly property int volumePopupSeparator: 1                    // тонкая линия "Система | приложения"
+    readonly property color volumePopupSeparatorColor: fgMuted
 }

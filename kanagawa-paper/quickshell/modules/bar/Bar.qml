@@ -25,13 +25,15 @@ import "../../theme"
 PanelWindow {
     id: bar
 	// ─── Сигналы наружу делегата ─────────────────────────────────────────
-    // Bar — это PanelWindow. Прокидывает клики по иконкам LeftSection
+    // Bar — это PanelWindow. Прокидывает клики по иконкам
     // наверх в shell.qml, который превращает их в открытие попапов.
-    // Параметр iconLeftX — глобальные координаты левого края иконки.
     signal leftPowerClicked(int iconLeftX)
     signal leftTerminalClicked(int iconLeftX)
     signal leftFilesClicked(int iconLeftX)
 	signal leftWallpaperClicked(int iconLeftX)
+
+	signal rightClockClicked(int iconLeftX)
+	signal rightVolumeClicked(int iconLeftX)
 
     // ─── Layer-shell параметры ───────────────────────────────────────────
     WlrLayershell.namespace: "qs-bar"
@@ -111,9 +113,14 @@ PanelWindow {
             id: rightSection
             anchors.right: parent.right
             anchors.bottom: parent.bottom
-            anchors.bottomMargin: Theme.sectionBottomMargin
+			anchors.bottomMargin: Theme.sectionBottomMargin
+
+			barWindow: bar
+
+			onClockClicked: (x) => bar.rightClockClicked(x)
+			onVolumeClicked: (x) => bar.rightVolumeClicked(x)
         }
-// ─── Tray-секция: прибита к ЛЕВОЙ грани правой секции ────────────
+		// ─── Tray-секция: прибита к ЛЕВОЙ грани правой секции ────────────
         // Растёт справа налево по мере добавления tray-иконок.
         // В чате A — заглушка из 3 точек; в чате C — реальный SystemTray.
         TraySection {
@@ -121,7 +128,9 @@ PanelWindow {
             anchors.right: rightSection.left
             anchors.rightMargin: Theme.sectionGap
             anchors.bottom: parent.bottom
-            anchors.bottomMargin: Theme.sectionBottomMargin
+			anchors.bottomMargin: Theme.sectionBottomMargin
+
+			barWindow: bar
         }
     }
 }

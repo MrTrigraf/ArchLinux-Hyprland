@@ -1,8 +1,10 @@
+//@ pragma UseQApplication
 import QtQuick
 import Quickshell
 import Quickshell.Io
 import "./modules/bar"
 import "./modules/popups"
+import "./theme"
 
 // shell.qml - точка входа Quickshell.
 //
@@ -52,6 +54,18 @@ Variants {
 				wallpaperPicker.anchorX = 0
 				PopupManager.toggle(wallpaperPicker)
 			}
+
+			onRightClockClicked: (clockLocalX) => {
+				calendarPopup.parentBar = bar
+				calendarPopup.anchorX = bar.width - 0 - calendarPopup.contentWidth
+				PopupManager.toggle(calendarPopup)
+			}
+
+			onRightVolumeClicked: (volumeLocalX) => {
+				volumePopup.parentBar = bar
+				volumePopup.anchorX = bar.width - 0 - volumePopup.contentWidth
+				PopupManager.toggle(volumePopup)
+			}
         }
 
         // ─── Попап питания ──────────────────────────────────────────────
@@ -59,6 +73,8 @@ Variants {
         // onLeftPowerClicked перед toggle().
 		property PowerMenu powerMenu: PowerMenu {}
 		property WallpaperPicker wallpaperPicker: WallpaperPicker {}
+		property CalendarPopup calendarPopup: CalendarPopup {}
+		property VolumePopup volumePopup: VolumePopup {}
 		property Process terminakProc: Process {
 			command: ["kitty", "--class", "floating-kitty"]
 		}

@@ -1,0 +1,2 @@
+singleton KeyboardLayoutModel 1.0 KeyboardLayoutModel.qml
+singleton VolumeModel 1.0 VolumeModel.qml
