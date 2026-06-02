@@ -29,6 +29,7 @@ QtObject {
 
     // ─── Status (для иконок-индикаторов: Wi-Fi, BT, ошибки) ────────────────
     readonly property color statusOk:    "#8ea49e"   // connected / healthy
+	readonly property color statusCauntion: "#c4b28a"// приглушенный желтый
     readonly property color statusWarn:  "#b6927b"   // мягкое предупреждение
     readonly property color statusError: "#c4746e"   // отключено критично
 
@@ -170,5 +171,10 @@ QtObject {
     readonly property int volumePopupWidth:    260
     readonly property int volumePopupRowGap:   volumeSliderRowGap   // gap между слайдерами
     readonly property int volumePopupSeparator: 1                    // тонкая линия "Система | приложения"
-    readonly property color volumePopupSeparatorColor: fgMuted
+	readonly property color volumePopupSeparatorColor: fgMuted
+
+	// ─── Battery popup ───────────────────────────────────────────────────
+	readonly property int batteryPopupWidth: 240
+	readonly property int batteryPopupRowGap: 12
+	readonly property int brightnessIconSize: 14
 }

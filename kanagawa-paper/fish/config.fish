@@ -28,8 +28,10 @@ set -gx fish_color_option          d4c196
 
 # === Интерактивные настройки ===
 if status is-interactive
-    # Приветствие — fastfetch при открытии терминала
-    #fastfetch --config ~/.config/hypr/kanagawa-paper/fastfetch/config.jsonc
+    #fastfetch
+    function fastfetch --wraps='fastfetch'
+      command fastfetch --config ~/.config/hypr/kanagawa-paper/fastfetch/config.jsonc $argv
+    end
 
     # Отключить дефолтный fish-greeting (логотип fish)
     set -U fish_greeting
