@@ -53,14 +53,10 @@ Singleton {
     }
 
     // ── Публичный метод записи ─────────────────────────────────────────
-    // v: 0..1. Округляем до целого процента — brightnessctl работает с
-    // целочисленными уровнями, дробные проценты бесполезны.
-    // Поведение оптимистичное: обновляем root.value сразу, не ждём
-    // exit-кода. Если процесс упадёт — индикатор разойдётся с реальной
-    // яркостью до следующего setValue. Сценарий маловероятен (мы уже
-    // проверили права доступа в Phase 2).
+	readonly property real minValue: 0.05
+
     function setValue(v) {
-        const clamped = Math.max(0, Math.min(1, v))
+        const clamped = Math.max(minValue, Math.min(1, v))
         const percent = Math.round(clamped * 100)
         Quickshell.execDetached(["brightnessctl", "set", percent + "%"])
         root.value = clamped

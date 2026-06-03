@@ -66,6 +66,12 @@ Variants {
 				volumePopup.anchorX = bar.width - 0 - volumePopup.contentWidth
 				PopupManager.toggle(volumePopup)
 			}
+
+			onRightBatteryClicked: (batteryLocalX) => {
+				batteryPopup.parentBar = bar
+				batteryPopup.anchorX = bar.width - 0 - batteryPopup.contentWidth
+				PopupManager.toggle(batteryPopup)
+			}
         }
 
         // ─── Попап питания ──────────────────────────────────────────────
@@ -75,6 +81,7 @@ Variants {
 		property WallpaperPicker wallpaperPicker: WallpaperPicker {}
 		property CalendarPopup calendarPopup: CalendarPopup {}
 		property VolumePopup volumePopup: VolumePopup {}
+		property BatteryPopup batteryPopup: BatteryPopup{}
 		property Process terminakProc: Process {
 			command: ["kitty", "--class", "floating-kitty"]
 		}

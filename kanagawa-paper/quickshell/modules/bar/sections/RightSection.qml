@@ -21,7 +21,8 @@ WrapperRectangle {
     property var barWindow: null
 
     signal clockClicked(int clockLocalX)
-    signal volumeClicked(int volumeLocalX)
+	signal volumeClicked(int volumeLocalX)
+	signal batteryClicked(int batteryLocalX)
 
     // ─── Системные часы (реактивно по минуте) ─────────────────────────────
     SystemClock {
@@ -174,5 +175,68 @@ WrapperRectangle {
                 cursorShape: Qt.PointingHandCursor
             }
         }
+
+		// ─── 4. Battery icon (правее часов, только ноут) ──────────────────
+        // --- desktop: comment out the battery block (no battery) ---
+        Item {
+            id: batterySlot
+            implicitWidth:  Theme.batteryIconSize
+            implicitHeight: Theme.batteryIconSize
+
+            readonly property bool isHovered: batteryHover.hovered
+
+            // Локальные animated properties для variable axes Material Symbols.
+            // Behavior on real/int работает; на dict font.variableAxes напрямую —
+            // нет, поэтому держим оси в отдельных свойствах с биндингом на
+            // BatteryModel и анимируем их переходы здесь.
+            property real animFill:   BatteryModel.iconFill
+            property int  animWeight: BatteryModel.iconWeight
+
+            Behavior on animFill {
+                NumberAnimation { duration: Theme.animMed; easing.type: Easing.OutCubic }
+            }
+            Behavior on animWeight {
+                NumberAnimation { duration: Theme.animMed; easing.type: Easing.OutCubic }
+            }
+
+            Text {
+                anchors.fill: parent
+                text: BatteryModel.iconGlyph
+                color: batterySlot.isHovered ? Theme.accent : BatteryModel.iconColor
+                font.family: Theme.iconFamily
+                font.pixelSize: Theme.batteryIconSize
+                horizontalAlignment: Text.AlignHCenter
+                verticalAlignment: Text.AlignVCenter
+
+                font.variableAxes: ({
+                    FILL: batterySlot.animFill,
+                    wght: batterySlot.animWeight,
+                    opsz: 24,
+                    GRAD: 0
+                })
+
+                Behavior on color {
+                    ColorAnimation { duration: Theme.animMed; easing.type: Easing.OutCubic }
+                }
+            }
+
+            TapHandler {
+                acceptedButtons: Qt.LeftButton
+                onTapped: {
+                    var localX = 0
+                    if (root.barWindow !== null && root.barWindow !== undefined) {
+                        var p = batterySlot.mapToItem(root.barWindow.contentItem, 0, 0)
+                        localX = Math.round(p.x)
+                    }
+                    root.batteryClicked(localX)
+                }
+            }
+
+            HoverHandler {
+                id: batteryHover
+                cursorShape: Qt.PointingHandCursor
+            }
+        }
+        // --- end of battery block ---
     }
 }

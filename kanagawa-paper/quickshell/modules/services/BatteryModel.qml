@@ -12,7 +12,7 @@ Singleton {
     readonly property bool ready: device.ready && device.isLaptopBattery
 
     // ── Сырые значения от UPower ───────────────────────────────────────
-    readonly property real percentage: ready ? device.percentage : 0
+    readonly property real percentage: ready ? device.percentage * 100 : 0
     readonly property int  state:      ready ? device.state : UPowerDeviceState.Unknown
 
     // ── Производные булевы для UI ──────────────────────────────────────

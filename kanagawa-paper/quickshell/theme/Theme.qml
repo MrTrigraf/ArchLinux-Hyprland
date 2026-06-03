@@ -177,4 +177,5 @@ QtObject {
 	readonly property int batteryPopupWidth: 240
 	readonly property int batteryPopupRowGap: 12
 	readonly property int brightnessIconSize: 14
+	readonly property int batteryIconSize: 20
 }
