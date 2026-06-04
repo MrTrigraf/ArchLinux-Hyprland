@@ -29,7 +29,7 @@ QtObject {
 
     // ─── Status (для иконок-индикаторов: Wi-Fi, BT, ошибки) ────────────────
     readonly property color statusOk:    "#8ea49e"   // connected / healthy
-	readonly property color statusCauntion: "#c4b28a"// приглушенный желтый
+	readonly property color statusCaution: "#c4b28a"// приглушенный желтый
     readonly property color statusWarn:  "#b6927b"   // мягкое предупреждение
     readonly property color statusError: "#c4746e"   // отключено критично
 
