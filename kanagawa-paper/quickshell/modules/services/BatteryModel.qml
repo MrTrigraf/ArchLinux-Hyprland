@@ -60,5 +60,27 @@ Singleton {
         if (percentage >= 62.5) return Theme.statusCaution
         if (percentage >= 37.5) return Theme.statusWarn
         return Theme.statusError
+	}
+
+	// ── Оставшееся время в минутах ─────────────────────────────────────
+    readonly property int minutesRemaining: {
+        if (!ready) return 0
+        if (state === UPowerDeviceState.FullyCharged) return 0
+        if (charging) return Math.round(device.timeToFull / 60)
+        if (state === UPowerDeviceState.Discharging) return Math.round(device.timeToEmpty / 60)
+        return 0
+    }
+
+    // ── Форматированная строка времени ─────────────────────────────────
+    readonly property string timeLabel: {
+        if (!ready) return ""
+        if (state === UPowerDeviceState.FullyCharged) return "полный"
+        const m = minutesRemaining
+        if (m <= 0) return ""              // changeRate ещё не стабилизировался
+        const hours = Math.floor(m / 60)
+        const mins  = m % 60
+        if (hours >= 24) return hours + "ч"   // очень большое время — без минут
+        if (hours === 0) return mins + "м"
+        return hours + "ч " + mins + "м"
     }
 }

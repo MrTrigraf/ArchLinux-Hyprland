@@ -1,4 +1,5 @@
 import QtQuick
+import Quickshell
 import Quickshell.Services.UPower
 import "../services"
 import "../../theme"
@@ -15,6 +16,21 @@ PopupBase {
     contentHeight: 3 * sectionHeight
                  + 2 * Theme.batteryPopupRowGap
                  + 2 * Theme.popupContentPadding
+
+	// ── Refresh UPower при открытом попапе ─────────────────────────────
+	Timer {
+        interval: 5000                  // каждые 5 секунд
+        running: root.isOpen            // активен только при открытом попапе
+        repeat: true
+        triggeredOnStart: true          // дёрнуть сразу при открытии
+        onTriggered: Quickshell.execDetached([
+            "busctl", "--system", "call",
+            "org.freedesktop.UPower",
+            "/org/freedesktop/UPower/devices/DisplayDevice",
+            "org.freedesktop.UPower.Device",
+            "Refresh"
+        ])
+    }
 
     Column {
         anchors.fill: parent
@@ -161,10 +177,11 @@ PopupBase {
                     font.family: Theme.fontFamily
                     font.pixelSize: Theme.volumeSliderLabelSize
                 }
-                Text {
+               Text {
                     anchors.right: parent.right
                     anchors.verticalCenter: parent.verticalCenter
                     text: Math.round(BatteryModel.percentage) + "%"
+                        + (BatteryModel.timeLabel ? " · " + BatteryModel.timeLabel : "")
                     color: Theme.volumeSliderValueFg
                     font.family: Theme.fontFamily
                     font.pixelSize: Theme.volumeSliderLabelSize
