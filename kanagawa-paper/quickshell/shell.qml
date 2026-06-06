@@ -4,22 +4,11 @@ import Quickshell
 import Quickshell.Io
 import "./modules/bar"
 import "./modules/popups"
+import "./modules/services/"
 import "./theme"
 
 // shell.qml - точка входа Quickshell.
-//
-// Variants по Quickshell.screens создаёт по одной копии делегата на каждый
-// подключённый монитор. Делегат - QtObject-контейнер, внутри которого живут:
-//   - Bar (PanelWindow с layer-shell - отдельное окно)
-//   - PowerMenu (PopupWindow - тоже отдельное окно)
-//
-// PowerMenu позиционируется относительно своего Bar через anchor.window,
-// поэтому каждый монитор имеет свой набор Bar+PowerMenu. Иначе на
-// multi-monitor клик с одного экрана открывал бы попап на другом.
-//
-// modelData в делегате - это ShellScreen текущего монитора. Передаётся
-// в Bar.screen, чтобы layer-shell поверхность создалась именно на этом
-// дисплее. PowerMenu берёт screen из своего parentBar автоматически.
+
 Variants {
     model: Quickshell.screens
 
@@ -67,11 +56,16 @@ Variants {
 				PopupManager.toggle(volumePopup)
 			}
 
-			onRightBatteryClicked: (batteryLocalX) => {
-				batteryPopup.parentBar = bar
-				batteryPopup.anchorX = bar.width - 0 - batteryPopup.contentWidth
-				PopupManager.toggle(batteryPopup)
+			onRightBatteryClicked: (x) => {
+				networkPopup.parentBar = bar
+				networkPopup.anchorX = bar.width - networkPopup.contentWidth - Theme.popupSideMargin
+				PopupManager.toggle(networkPopup)
 			}
+//			onRightBatteryClicked: (batteryLocalX) => {
+//				batteryPopup.parentBar = bar
+//				batteryPopup.anchorX = bar.width - 0 - batteryPopup.contentWidth
+//				PopupManager.toggle(batteryPopup)
+//			}
         }
 
         // ─── Попап питания ──────────────────────────────────────────────
@@ -81,12 +75,13 @@ Variants {
 		property WallpaperPicker wallpaperPicker: WallpaperPicker {}
 		property CalendarPopup calendarPopup: CalendarPopup {}
 		property VolumePopup volumePopup: VolumePopup {}
-		property BatteryPopup batteryPopup: BatteryPopup{}
+//		property BatteryPopup batteryPopup: BatteryPopup{}
 		property Process terminakProc: Process {
 			command: ["kitty", "--class", "floating-kitty"]
 		}
 		property Process fileProc: Process {
 			command: ["nautilus"]
 		}
+		property NetworkPopup networkPopup: NetworkPopup{}
     }
 }

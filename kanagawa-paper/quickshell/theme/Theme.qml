@@ -178,4 +178,55 @@ QtObject {
 	readonly property int batteryPopupRowGap: 12
 	readonly property int brightnessIconSize: 14
 	readonly property int batteryIconSize: 20
+
+	// ─── Network popup ───────────────────────────────────────────────────
+	//   [1. Активный коннект]  ← Wi-Fi/Ethernet/нет-связи, цветная подсветка
+	//   ──────────────────────
+	//   [2. Список Wi-Fi сетей] ← только если есть WifiDevice; скролл при >max
+	//   ──────────────────────
+	//   [3. VPN-профили]       ← список с тогом, меню "три точки", кнопка "+"
+
+	readonly property int networkPopupWidth:       300
+	readonly property int networkPopupSectionGap:  10           // gap между блоками
+	readonly property int networkSeparatorH:       1            // толщина разделителя
+	readonly property color networkSeparatorColor: fgMuted
+
+	// Блок 1: активный коннект. Левая полоска-индикатор + полупрозрачный фон
+	// в тон полоске. statusOk — есть соединение, statusError — нет.
+	readonly property int networkActiveBlockRadius:  8
+	readonly property int networkActiveBlockBorderW: 3            // ширина левой полоски
+	readonly property int networkActiveBlockPadH:    10
+	readonly property int networkActiveBlockPadV:    8
+	readonly property int networkActiveTitleSize:    13           // имя сети / "Нет подключения"
+	readonly property int networkActiveSubtitleSize: 10           // мелкая строка статуса
+	readonly property int networkActiveIconSize:     16           // wifi/ethernet/wifi_off
+	readonly property color networkActiveBgOk:       Qt.rgba(0x8e/255, 0xa4/255, 0x9e/255, 0.16)
+	readonly property color networkActiveBgError:    Qt.rgba(0xc4/255, 0x74/255, 0x6e/255, 0.16)
+	readonly property color networkActiveBorderOk:    statusOk
+	readonly property color networkActiveBorderError: statusError
+
+	// Блоки 2-3: строки списков (Wi-Fi-сети и VPN-профили).
+	readonly property int networkRowHeight:   28
+	readonly property int networkRowPadH:     8
+	readonly property int networkRowRadius:   6
+	readonly property int networkRowIconSize: 14                  // wifi/lock/vpn-state в строке
+	readonly property int networkRowFontSize: 12                  // SSID / имя VPN
+	readonly property int networkRowMetaSize: 9                   // мета: тип VPN ("openvpn")
+	readonly property color networkRowHoverBg:    Qt.rgba(0xDC/255, 0xD7/255, 0xBA/255, 0.06)
+	readonly property color networkRowSelectedBg: Qt.rgba(0xb4/255, 0xa7/255, 0xb5/255, 0.12)
+
+	// Подпись секции внутри попапа ("Доступные сети", "VPN").
+	readonly property int networkSectionLabelSize: 10
+	readonly property int networkSectionLabelPadH: 4
+	readonly property int networkSectionLabelPadV: 4
+
+	// Лимиты до появления вертикального скролла внутри списка.
+	readonly property int networkMaxVisibleWifi: 5
+	readonly property int networkMaxVisibleVpn:  5
+
+	// Градация цвета иконки Wi-Fi в зависимости от уровня сигнала.
+	// signalStrength ∈ [0..1]: >=0.75 — full, 0.50..0.74 — mid, <0.50 — low.
+	readonly property color networkSignalFull: fg
+	readonly property color networkSignalMid:  fgSubtle
+	readonly property color networkSignalLow:  fgMuted
 }

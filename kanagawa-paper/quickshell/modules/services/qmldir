@@ -2,3 +2,5 @@ singleton KeyboardLayoutModel 1.0 KeyboardLayoutModel.qml
 singleton VolumeModel 1.0 VolumeModel.qml
 singleton BatteryModel 1.0 BatteryModel.qml
 singleton BrightnessModel 1.0 BrightnessModel.qml
+singleton NetworkModel 1.0 NetworkModel.qml
+singleton VpnModel 1.0 VpnModel.qml
