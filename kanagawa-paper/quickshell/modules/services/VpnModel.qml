@@ -19,12 +19,15 @@ Singleton {
 		var allowedTypes = ["vpn", "wireguard"]
 		var result = []
 		for (var i = 0; i < lines.length; i++) {
-			var parts = lines[i].match(/(?:\\:|[^:])+/g) || []
-			if (parts.length < 4) continue
-			var name   = parts[0].replace(/\\:/g, ":")
-			var uuid   = parts[1]
-			var type   = parts[2]
-			var device = parts[3]   // пусто, если профиль не активен
+			var safe = lines[i].replace(/\\:/g, "\x00")
+			var fields = safe.split(":").map(function(p) {
+				return p.replace(/\x00/g, ":")
+			})
+			if (fields.length < 4) continue
+			var name   = fields[0]
+			var uuid   = fields[1]
+			var type   = fields[2]
+			var device = fields[3]   // пустая строка, если профиль не активен
 			if (allowedTypes.indexOf(type) < 0) continue
 			result.push({
 				name:   name,
@@ -92,10 +95,10 @@ Singleton {
 		// nm-connection-editor — GTK-редактор профилей. Без аргументов
 		// открывает список со всеми коннектами + кнопку "+" для нового;
 		// с --edit=<uuid> сразу открывает форму нужного профиля.
-		var cmd = uuid && uuid.length > 0
+		var inner = uuid && uuid.length > 0
 			? ["nm-connection-editor", "--edit=" + uuid]
 			: ["nm-connection-editor"]
-		Quickshell.execDetached(cmd)
+		Quickshell.execDetached(["hyprctl", "dispatch", "hl.dsp.exec_cmd(\"" + inner + "\")"])
 	}
 
 	// ── Диагностический блок ───────────────────────────────────────────

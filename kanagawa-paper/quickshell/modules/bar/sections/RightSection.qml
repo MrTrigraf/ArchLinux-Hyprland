@@ -23,6 +23,7 @@ WrapperRectangle {
     signal clockClicked(int clockLocalX)
 	signal volumeClicked(int volumeLocalX)
 	signal batteryClicked(int batteryLocalX)
+	signal networkClicked(int networkLocalX)
 
     // ─── Системные часы (реактивно по минуте) ─────────────────────────────
     SystemClock {
@@ -67,7 +68,65 @@ WrapperRectangle {
                 cursorShape: Qt.PointingHandCursor
             }
         }
-        // ─── 2. Volume-иконка ─────────────────────────────────────────────
+
+        // ─── 2. Network-иконка ────────────────────────────────────────────
+        // Приоритет глифа: Wi-Fi (с градацией по сигналу) → Ethernet → off.
+        // Цвет — два состояния: Theme.fg (есть коннект) / Theme.statusError
+        // (нет связи). При hover — Theme.accent, как у других слотов.
+        Item {
+            id: networkSlot
+            implicitWidth:  Theme.volumeIconSize
+            implicitHeight: Theme.volumeIconSize
+
+            readonly property bool isHovered: networkHover.hovered
+
+            readonly property string iconGlyph: {
+                if (NetworkModel.wifiConnected) {
+                    var s = NetworkModel.activeSignal || 0
+                    if (s >= 0.75) return "signal_wifi_4_bar"
+                    if (s >= 0.50) return "network_wifi_3_bar"
+                    if (s >= 0.25) return "network_wifi_2_bar"
+                    return "network_wifi_1_bar"
+                }
+                if (NetworkModel.wiredConnected) return "settings_ethernet"
+                return "signal_wifi_off"
+            }
+
+            Text {
+                anchors.fill: parent
+                text: networkSlot.iconGlyph
+                color: networkSlot.isHovered
+                    ? Theme.accent
+                    : (NetworkModel.anyConnected ? Theme.fg : Theme.statusError)
+                font.family: Theme.iconFamily
+                font.pixelSize: Theme.volumeIconSize
+                horizontalAlignment: Text.AlignHCenter
+                verticalAlignment: Text.AlignVCenter
+
+                Behavior on color {
+                    ColorAnimation { duration: Theme.animFast }
+                }
+            }
+
+            TapHandler {
+                acceptedButtons: Qt.LeftButton
+                onTapped: {
+                    var localX = 0
+                    if (root.barWindow !== null && root.barWindow !== undefined) {
+                        var p = networkSlot.mapToItem(root.barWindow.contentItem, 0, 0)
+                        localX = Math.round(p.x)
+                    }
+                    root.networkClicked(localX)
+                }
+            }
+
+            HoverHandler {
+                id: networkHover
+                cursorShape: Qt.PointingHandCursor
+            }
+        }
+
+        // ─── 3. Volume-иконка ─────────────────────────────────────────────
         Item {
             id: volumeSlot
             implicitWidth:  Theme.volumeIconSize
@@ -135,7 +194,7 @@ WrapperRectangle {
             }
         }
 
-        // ─── 3. Часы HH:MM (кликабельные → CalendarPopup) ─────────────────
+        // ─── 4. Часы HH:MM (кликабельные → CalendarPopup) ─────────────────
         Item {
             id: clockSlot
             implicitWidth:  Theme.clockSlotWidth
@@ -176,7 +235,7 @@ WrapperRectangle {
             }
         }
 
-		// ─── 4. Battery icon (правее часов, только ноут) ──────────────────
+		// ─── 5. Battery icon (правее часов, только ноут) ──────────────────
         // --- desktop: comment out the battery block (no battery) ---
         Item {
             id: batterySlot

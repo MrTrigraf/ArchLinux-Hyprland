@@ -56,32 +56,34 @@ Variants {
 				PopupManager.toggle(volumePopup)
 			}
 
-			onRightBatteryClicked: (x) => {
+			onRightNetworkClicked: (networkLocalX) => {
 				networkPopup.parentBar = bar
 				networkPopup.anchorX = bar.width - networkPopup.contentWidth - Theme.popupSideMargin
 				PopupManager.toggle(networkPopup)
 			}
-//			onRightBatteryClicked: (batteryLocalX) => {
-//				batteryPopup.parentBar = bar
-//				batteryPopup.anchorX = bar.width - 0 - batteryPopup.contentWidth
-//				PopupManager.toggle(batteryPopup)
-//			}
+
+			onRightBatteryClicked: (batteryLocalX) => {
+				batteryPopup.parentBar = bar
+				batteryPopup.anchorX = bar.width - 0 - batteryPopup.contentWidth
+				PopupManager.toggle(batteryPopup)
+			}
         }
 
-        // ─── Попап питания ──────────────────────────────────────────────
-        // Стартует невидимым. parentBar и anchorX выставляются в обработчике
-        // onLeftPowerClicked перед toggle().
+        // ─── Попапы ─────────────────────────────────────────────────────
+        // Стартуют невидимыми. parentBar и anchorX выставляются в
+        // соответствующих обработчиках перед toggle().
 		property PowerMenu powerMenu: PowerMenu {}
 		property WallpaperPicker wallpaperPicker: WallpaperPicker {}
 		property CalendarPopup calendarPopup: CalendarPopup {}
 		property VolumePopup volumePopup: VolumePopup {}
-//		property BatteryPopup batteryPopup: BatteryPopup{}
+		property BatteryPopup batteryPopup: BatteryPopup {}
+		property NetworkPopup networkPopup: NetworkPopup {}
+
 		property Process terminakProc: Process {
-			command: ["kitty", "--class", "floating-kitty"]
+			command: ["hyprctl", "dispatch", "hl.dsp.exec_cmd(\"kitty --class floating-kitty\")"]
 		}
 		property Process fileProc: Process {
-			command: ["nautilus"]
+			command: ["hyprctl", "dispatch", "hl.dsp.exec_cmd(\"nautilus\")"]
 		}
-		property NetworkPopup networkPopup: NetworkPopup{}
     }
 }

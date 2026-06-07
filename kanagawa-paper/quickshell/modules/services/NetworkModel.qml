@@ -87,7 +87,7 @@ Singleton {
 	// fg — обычный (есть связь), statusError — красный (нет связи).
 	readonly property color iconColor: anyConnected ? Theme.fg : Theme.statusError
 
-	// ── Подключение / отключение ───────────────────────────────────────
+	// ── Подключение / отключение / удаление ────────────────────────────
 	function connectKnown(network) {
 		if (network) network.connect()
 	}
@@ -103,6 +103,10 @@ Singleton {
 		} else if (wiredConnected) {
 			wiredDevice.disconnect()
 		}
+	}
+
+	function forgetNetwork(net) {
+		if (net) net.forget()
 	}
 
 	// ── Диагностический блок (срабатывает реактивно при изменении devices) ──

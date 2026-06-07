@@ -14,14 +14,25 @@ import "../../theme"
 // Структура:
 //   [1] Активный коннект     ← полоска statusOk/statusError + иконка + статус
 //   ── разделитель ──
-//   [2] Wi-Fi сети           ← список + инлайн-форма пароля под выбранной сетью
+//   [2] Wi-Fi сети           ← список + инлайн-плашка под выбранной сетью
 //   ── разделитель ──
-//   [3] VPN-профили          ← список с тогом, меню "⋯", кнопка "+"
+//   [3] VPN-профили          ← список + кнопка "⋯" (открывает nm-connection-editor)
+//
+// Логика выбора сети в блоке [2]:
+//   - активная               → клик игнорируется (отключение через блок [1])
+//   - открытая (security==0) → подключение напрямую, без плашки
+//   - известная защищённая   → плашка forget/connect (две кнопки)
+//   - неизвестная защищённая → плашка ввода пароля
+//
+// Визуальное отличие known сетей: яркое имя (Theme.fg). Unknown — приглушённое
+// (Theme.fgSubtle). Активная — дополнительно Font.Medium.
 //
 // API:
 //   - NetworkModel: данные о Wi-Fi/Ethernet, sortedWifiNetworks для списка,
-//                   connectKnown/connectWithPsk/disconnectActive/toggleWifi.
-//   - VpnModel:     profiles[], connectProfile/disconnectProfile/removeProfile/openEditor.
+//                   connectKnown/connectWithPsk/disconnectActive/toggleWifi/
+//                   forgetNetwork.
+//   - VpnModel:     profiles[], connectProfile/disconnectProfile/openEditor.
+//                   CRUD профилей делается в nm-connection-editor.
 // ─────────────────────────────────────────────────────────────────────────────
 PopupBase {
 	id: popup
@@ -29,24 +40,34 @@ PopupBase {
 	contentWidth:  Theme.networkPopupWidth
 	contentHeight: layout.implicitHeight + 24
 
-	// Какая сеть сейчас в режиме ввода пароля.
-	// null — формы нет; объект WifiNetwork — форма раскрыта под этой строкой.
-	property var pskTargetNetwork: null
+	// Какая сеть сейчас в выделенном состоянии (с раскрытой инлайн-плашкой).
+	// null — плашек нет; объект WifiNetwork — плашка раскрыта под этой строкой.
+	// Тип плашки выбирается Loader'ом по net.known.
+	property var selectedNetwork: null
 
-	// У какого VPN-профиля сейчас открыто меню "⋯".
-	// null — меню закрыто; строка-uuid — меню открыто для этого профиля.
-	property string vpnMenuUuid: ""
-
-	// При открытии включаем Wi-Fi-сканер; при закрытии выключаем и сбрасываем
-	// раскрытые формы. Сканер потребляет энергию — держать только пока попап
-	// открыт.
+	// При открытии включаем Wi-Fi-сканер и сбрасываем "хвосты" прошлого сеанса
+	// (раскрытую плашку). При закрытии — отложенный сброс через Timer, иначе
+	// layout схлопывается одновременно с анимацией закрытия и виден
+	// "половинный" попап.
 	onIsOpenChanged: {
 		if (isOpen) {
+			closeCleanupTimer.stop()    // если успели снова открыть — отменяем сброс
+			// Состояние раскрытых плашек сбрасываем мгновенно — попап
+			// всегда открывается "чистым", без хвостов от прошлого раза.
+			selectedNetwork = null
 			NetworkModel.setScanning(true)
 		} else {
+			closeCleanupTimer.restart()
+		}
+	}
+
+	Timer {
+		id: closeCleanupTimer
+		interval: Theme.animMed + 50
+		repeat: false
+		onTriggered: {
 			NetworkModel.setScanning(false)
-			pskTargetNetwork = null
-			vpnMenuUuid = ""
+			popup.selectedNetwork = null
 		}
 	}
 
@@ -247,10 +268,27 @@ PopupBase {
 				padding: 6
 			}
 
+			// Плейсхолдер на время инициализации сканера: Wi-Fi уже включён,
+			// но первый ответ от nm не пришёл — иначе попап мигает пустым
+			// блоком сетей пока идёт скан.
+			Text {
+				visible: NetworkModel.hasWifi && NetworkModel.wifiEnabled
+					&& NetworkModel.wifiNetworks.length === 0
+				Layout.fillWidth: true
+				horizontalAlignment: Text.AlignHCenter
+				text: "поиск сетей..."
+				color: Theme.fgMuted
+				font.family: Theme.fontFamily
+				font.pixelSize: Theme.networkRowMetaSize
+				font.italic: true
+				padding: 6
+			}
+
 			// Список сетей: ListView с ограниченной высотой, скролл при >max.
 			ListView {
 				id: wifiListView
 				visible: NetworkModel.hasWifi && NetworkModel.wifiEnabled
+					&& NetworkModel.wifiNetworks.length > 0
 				Layout.fillWidth: true
 				Layout.preferredHeight: Math.min(
 					contentHeight,
@@ -267,14 +305,15 @@ PopupBase {
 
 					readonly property var net: modelData
 					readonly property bool isActive: net && net.connected
-					readonly property bool isPskTarget: popup.pskTargetNetwork === net
+					readonly property bool isKnown: net && net.known
+					readonly property bool isSelected: popup.selectedNetwork === net
 
 					// ── Строка сети ────────────────────────────────────
 					Rectangle {
 						width: parent.width
 						height: Theme.networkRowHeight
 						radius: Theme.networkRowRadius
-						color: parent.isPskTarget
+						color: parent.isSelected
 							? Theme.networkRowSelectedBg
 							: (rowHover.hovered ? Theme.networkRowHoverBg : "transparent")
 						Behavior on color { ColorAnimation { duration: Theme.animFast } }
@@ -299,10 +338,16 @@ PopupBase {
 							}
 
 							// Имя сети.
+							// Цвет: активная или known → яркий Theme.fg;
+							// unknown → приглушённый Theme.fgSubtle (это и есть
+							// визуальное отличие "знакомых" сетей от незнакомых).
+							// Bold — только у активной.
 							Text {
 								Layout.fillWidth: true
 								text: parent.parent.parent.net ? (parent.parent.parent.net.name || "") : ""
-								color: parent.parent.parent.isActive ? Theme.fg : Theme.fgSubtle
+								color: parent.parent.parent.isActive || parent.parent.parent.isKnown
+									? Theme.fg
+									: Theme.fgSubtle
 								font.family: Theme.fontFamily
 								font.pixelSize: Theme.networkRowFontSize
 								font.weight: parent.parent.parent.isActive ? Font.Medium : Font.Normal
@@ -327,29 +372,45 @@ PopupBase {
 								if (!parent.parent.net) return
 								// Активная сеть — клик ничего не делает (отключение через "Отключиться" в блоке 1).
 								if (parent.parent.net.connected) return
-								// Известная сеть (с сохранённым в NM PSK) — подключаемся напрямую.
-								// Также для открытых сетей (security === 0).
-								if (parent.parent.net.known || parent.parent.net.security === 0) {
+								// Открытая сеть — подключаемся напрямую, без плашки.
+								if (parent.parent.net.security === 0) {
 									NetworkModel.connectKnown(parent.parent.net)
 									return
 								}
-								// Иначе — раскрываем инлайн-форму ввода пароля.
-								popup.pskTargetNetwork = parent.parent.net
+								// Повторный тап по уже выделенной сети — закрываем плашку (toggle).
+								if (popup.selectedNetwork === parent.parent.net) {
+									popup.selectedNetwork = null
+									wifiListView.forceLayout()
+									return
+								}
+								// Защищённая (known или unknown) — раскрываем плашку.
+								// Конкретный компонент выбирает Loader по net.known.
+								popup.selectedNetwork = parent.parent.net
 							}
 						}
 					}
 
-					// ── Инлайн-форма ввода пароля (раскрыта только под целевой сетью) ─
+					// ── Инлайн-плашка под строкой ──────────────────────
+					// Тип плашки выбирается по net.known:
+					//   - known   → forgetFormComponent (две кнопки)
+					//   - unknown → pskFormComponent    (поле пароля + две кнопки)
+					//
+					// Явный height нужен, чтобы Column-delegate пересчитал свою
+					// implicitHeight сразу после деактивации Loader'а. Без этого
+					// пустое место остаётся до следующего события в ListView.
 					Loader {
 						width: parent.width
-						active: parent.isPskTarget
-						sourceComponent: pskFormComponent
+						active: parent.isSelected
+						sourceComponent: parent.net && parent.net.known
+							? forgetFormComponent
+							: pskFormComponent
+						height: active && item ? item.implicitHeight : 0
 					}
 				}
 			}
 		}
 
-		// ── Компонент формы ввода пароля ───────────────────────────────
+		// ── Компонент формы ввода пароля (для unknown защищённой сети) ──
 		Component {
 			id: pskFormComponent
 
@@ -393,9 +454,10 @@ PopupBase {
 							focus: true
 							onAccepted: {
 								// Enter — подтверждение.
-								if (text.length > 0 && popup.pskTargetNetwork) {
-									NetworkModel.connectWithPsk(popup.pskTargetNetwork, text)
-									popup.pskTargetNetwork = null
+								if (text.length > 0 && popup.selectedNetwork) {
+									NetworkModel.connectWithPsk(popup.selectedNetwork, text)
+									popup.selectedNetwork = null
+									wifiListView.forceLayout()
 								}
 							}
 						}
@@ -427,7 +489,10 @@ PopupBase {
 							HoverHandler { id: cancelHover; cursorShape: Qt.PointingHandCursor }
 							TapHandler {
 								acceptedButtons: Qt.LeftButton
-								onTapped: { popup.pskTargetNetwork = null }
+								onTapped: {
+									popup.selectedNetwork = null
+									wifiListView.forceLayout()
+								}
 							}
 						}
 
@@ -452,10 +517,94 @@ PopupBase {
 							TapHandler {
 								acceptedButtons: Qt.LeftButton
 								onTapped: {
-									if (pskInput.text.length > 0 && popup.pskTargetNetwork) {
-										NetworkModel.connectWithPsk(popup.pskTargetNetwork, pskInput.text)
-										popup.pskTargetNetwork = null
+									if (pskInput.text.length > 0 && popup.selectedNetwork) {
+										NetworkModel.connectWithPsk(popup.selectedNetwork, pskInput.text)
+										popup.selectedNetwork = null
+										wifiListView.forceLayout()
 									}
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+
+		// ── Компонент плашки forget/connect (для known защищённой сети) ─
+		// Без подписи, только две кнопки: "Забыть" (красная) + "Подключиться".
+		Component {
+			id: forgetFormComponent
+
+			Rectangle {
+				implicitHeight: forgetRow.implicitHeight + 16
+				color: Theme.networkRowSelectedBg
+				radius: Theme.networkRowRadius
+
+				RowLayout {
+					id: forgetRow
+					anchors.fill: parent
+					anchors.margins: 8
+					spacing: 6
+
+					// Забыть — красная (border + текст в statusError).
+					// После forget сеть становится unknown; selectedNetwork
+					// сбрасываем, чтобы Loader не переключился на pskFormComponent.
+					Rectangle {
+						Layout.fillWidth: true
+						implicitHeight: 24
+						radius: Theme.networkRowRadius
+						color: forgetHover.hovered ? Theme.networkRowHoverBg : "transparent"
+						border.color: Theme.statusError
+						border.width: 1
+						Behavior on color { ColorAnimation { duration: Theme.animFast } }
+
+						Text {
+							anchors.centerIn: parent
+							text: "Забыть"
+							color: Theme.statusError
+							font.family: Theme.fontFamily
+							font.pixelSize: Theme.networkRowMetaSize
+						}
+
+						HoverHandler { id: forgetHover; cursorShape: Qt.PointingHandCursor }
+						TapHandler {
+							acceptedButtons: Qt.LeftButton
+							onTapped: {
+								if (popup.selectedNetwork) {
+									NetworkModel.forgetNetwork(popup.selectedNetwork)
+									popup.selectedNetwork = null
+									wifiListView.forceLayout()
+								}
+							}
+						}
+					}
+
+					// Подключиться — accent. Известная сеть, пароль уже в NM,
+					// никаких запросов не будет.
+					Rectangle {
+						Layout.fillWidth: true
+						implicitHeight: 24
+						radius: Theme.networkRowRadius
+						color: reconnectHover.hovered ? Qt.lighter(Theme.accent, 1.1) : Theme.accent
+						Behavior on color { ColorAnimation { duration: Theme.animFast } }
+
+						Text {
+							anchors.centerIn: parent
+							text: "Подключиться"
+							color: Theme.bg
+							font.family: Theme.fontFamily
+							font.pixelSize: Theme.networkRowMetaSize
+							font.weight: Font.Medium
+						}
+
+						HoverHandler { id: reconnectHover; cursorShape: Qt.PointingHandCursor }
+						TapHandler {
+							acceptedButtons: Qt.LeftButton
+							onTapped: {
+								if (popup.selectedNetwork) {
+									NetworkModel.connectKnown(popup.selectedNetwork)
+									popup.selectedNetwork = null
+									wifiListView.forceLayout()
 								}
 							}
 						}
@@ -481,7 +630,7 @@ PopupBase {
 			Layout.fillWidth: true
 			spacing: 4
 
-			// Заголовок секции + кнопка "+" справа.
+			// Заголовок секции + кнопка "⋯" справа.
 			RowLayout {
 				Layout.fillWidth: true
 				Layout.leftMargin:  Theme.networkSectionLabelPadH
@@ -504,16 +653,18 @@ PopupBase {
 					Layout.leftMargin: 6
 				}
 
-				// Кнопка "+": открывает nm-connection-editor для создания профиля.
+				// Кнопка "⋯": открывает nm-connection-editor. Всё управление
+				// VPN-профилями (создание, правка, удаление) — там. В попапе
+				// оставляем только подключение/отключение.
 				Text {
-					text: "add"
+					text: "more_horiz"
 					font.family: Theme.iconFamily
 					font.pixelSize: Theme.networkRowIconSize
-					color: addHover.hovered ? Theme.fg : Theme.fgSubtle
+					color: editorHover.hovered ? Theme.fg : Theme.fgSubtle
 					padding: 2
 					Behavior on color { ColorAnimation { duration: Theme.animFast } }
 
-					HoverHandler { id: addHover; cursorShape: Qt.PointingHandCursor }
+					HoverHandler { id: editorHover; cursorShape: Qt.PointingHandCursor }
 					TapHandler {
 						acceptedButtons: Qt.LeftButton
 						onTapped: VpnModel.openEditor("")
@@ -526,7 +677,7 @@ PopupBase {
 				visible: VpnModel.profiles.length === 0
 				Layout.fillWidth: true
 				horizontalAlignment: Text.AlignHCenter
-				text: "Нет VPN-профилей. Добавьте через +"
+				text: "Нет VPN-профилей. Добавьте через ⋯"
 				color: Theme.fgMuted
 				font.family: Theme.fontFamily
 				font.pixelSize: Theme.networkRowMetaSize
@@ -548,243 +699,67 @@ PopupBase {
 				interactive: contentHeight > height
 				model: VpnModel.profiles
 
-				delegate: Column {
+				// Делегат — Rectangle напрямую, без Column-обёртки. Меню
+				// "три точки" убрано: всё управление профилями делается
+				// через nm-connection-editor.
+				delegate: Rectangle {
 					width: ListView.view.width
-					spacing: 0
+					height: Theme.networkRowHeight
+					radius: Theme.networkRowRadius
+					color: vpnRowHover.hovered ? Theme.networkRowHoverBg : "transparent"
+					Behavior on color { ColorAnimation { duration: Theme.animFast } }
 
 					readonly property var profile: modelData
-					readonly property bool isMenuOpen: popup.vpnMenuUuid === (profile ? profile.uuid : "")
 
-					// ── Строка VPN-профиля ─────────────────────────────
-					Rectangle {
-						width: parent.width
-						height: Theme.networkRowHeight
-						radius: Theme.networkRowRadius
-						color: vpnRowHover.hovered ? Theme.networkRowHoverBg : "transparent"
-						Behavior on color { ColorAnimation { duration: Theme.animFast } }
+					RowLayout {
+						anchors.fill: parent
+						anchors.leftMargin: Theme.networkRowPadH
+						anchors.rightMargin: Theme.networkRowPadH
+						spacing: 6
 
-						RowLayout {
-							anchors.fill: parent
-							anchors.leftMargin: Theme.networkRowPadH
-							anchors.rightMargin: Theme.networkRowPadH
-							spacing: 6
-
-							// Индикатор-точка: filled при активном, contour при неактивном.
-							Rectangle {
-								width: 8; height: 8
-								radius: 4
-								color: parent.parent.parent.profile && parent.parent.parent.profile.active
-									? Theme.statusOk
-									: "transparent"
-								border.color: Theme.fgMuted
-								border.width: parent.parent.parent.profile && parent.parent.parent.profile.active ? 0 : 1.5
-							}
-
-							// Имя профиля.
-							Text {
-								text: parent.parent.parent.profile ? parent.parent.parent.profile.name : ""
-								color: parent.parent.parent.profile && parent.parent.parent.profile.active
-									? Theme.fg
-									: Theme.fgSubtle
-								font.family: Theme.fontFamily
-								font.pixelSize: Theme.networkRowFontSize
-								font.weight: parent.parent.parent.profile && parent.parent.parent.profile.active
-									? Font.Medium : Font.Normal
-								elide: Text.ElideRight
-							}
-
-							// Мета: тип VPN ("openvpn", "wireguard", ...).
-							Text {
-								Layout.fillWidth: true
-								text: parent.parent.parent.profile ? parent.parent.parent.profile.type : ""
-								color: Theme.fgMuted
-								font.family: Theme.fontFamily
-								font.pixelSize: Theme.networkRowMetaSize
-							}
-
-							// Меню "три точки".
-							Text {
-								text: "more_horiz"
-								font.family: Theme.iconFamily
-								font.pixelSize: Theme.networkRowIconSize
-								color: menuHover.hovered ? Theme.fg : Theme.fgSubtle
-								padding: 2
-
-								HoverHandler { id: menuHover; cursorShape: Qt.PointingHandCursor }
-								TapHandler {
-									acceptedButtons: Qt.LeftButton
-									onTapped: {
-										if (!parent.parent.parent.parent.profile) return
-										if (popup.vpnMenuUuid === parent.parent.parent.parent.profile.uuid) {
-											popup.vpnMenuUuid = ""
-										} else {
-											popup.vpnMenuUuid = parent.parent.parent.parent.profile.uuid
-										}
-									}
-								}
-							}
+						// Индикатор-точка: filled при активном, контур при неактивном.
+						Rectangle {
+							width: 8; height: 8
+							radius: 4
+							color: parent.parent.profile && parent.parent.profile.active
+								? Theme.statusOk
+								: "transparent"
+							border.color: Theme.fgMuted
+							border.width: parent.parent.profile && parent.parent.profile.active ? 0 : 1.5
 						}
 
-						HoverHandler { id: vpnRowHover; cursorShape: Qt.PointingHandCursor }
-						TapHandler {
-							acceptedButtons: Qt.LeftButton
-							onTapped: {
-								if (!parent.parent.profile) return
-								// Клик по строке — toggle подключения.
-								if (parent.parent.profile.active) {
-									VpnModel.disconnectProfile(parent.parent.profile.uuid)
-								} else {
-									VpnModel.connectProfile(parent.parent.profile.uuid)
-								}
-							}
+						// Имя профиля.
+						Text {
+							text: parent.parent.profile ? parent.parent.profile.name : ""
+							color: parent.parent.profile && parent.parent.profile.active
+								? Theme.fg
+								: Theme.fgSubtle
+							font.family: Theme.fontFamily
+							font.pixelSize: Theme.networkRowFontSize
+							font.weight: parent.parent.profile && parent.parent.profile.active
+								? Font.Medium : Font.Normal
+							elide: Text.ElideRight
+						}
+
+						// Мета: тип VPN ("vpn" / "wireguard").
+						Text {
+							Layout.fillWidth: true
+							text: parent.parent.profile ? parent.parent.profile.type : ""
+							color: Theme.fgMuted
+							font.family: Theme.fontFamily
+							font.pixelSize: Theme.networkRowMetaSize
 						}
 					}
 
-					// ── Выпадающее меню ────────────────────────────────
-					Loader {
-						width: parent.width - 20
-						x: 20
-						active: parent.isMenuOpen
-						sourceComponent: vpnMenuComponent
-						property var menuProfile: parent.profile
-					}
-				}
-			}
-		}
-
-		// ── Компонент выпадающего меню VPN ─────────────────────────────
-		Component {
-			id: vpnMenuComponent
-
-			Rectangle {
-				implicitHeight: menuColumn.implicitHeight + 8
-				color: Theme.sectionBg
-				radius: Theme.networkRowRadius
-				border.color: Theme.fgMuted
-				border.width: 1
-
-				property var profile: parent && parent.menuProfile ? parent.menuProfile : null
-
-				ColumnLayout {
-					id: menuColumn
-					anchors.fill: parent
-					anchors.margins: 4
-					spacing: 0
-
-					// Подключиться / Отключиться.
-					Rectangle {
-						Layout.fillWidth: true
-						implicitHeight: 28
-						radius: Theme.networkRowRadius
-						color: toggleHover.hovered ? Theme.networkRowHoverBg : "transparent"
-						Behavior on color { ColorAnimation { duration: Theme.animFast } }
-
-						RowLayout {
-							anchors.fill: parent
-							anchors.leftMargin: 10
-							spacing: 8
-							Text {
-								text: parent.parent.parent.parent.profile && parent.parent.parent.parent.profile.active
-									? "stop" : "play_arrow"
-								font.family: Theme.iconFamily
-								font.pixelSize: 12
-								color: parent.parent.parent.parent.profile && parent.parent.parent.parent.profile.active
-									? Theme.statusError : Theme.statusOk
-							}
-							Text {
-								Layout.fillWidth: true
-								text: parent.parent.parent.parent.profile && parent.parent.parent.parent.profile.active
-									? "Отключиться" : "Подключиться"
-								color: Theme.fg
-								font.family: Theme.fontFamily
-								font.pixelSize: Theme.networkRowMetaSize
-							}
-						}
-						HoverHandler { id: toggleHover; cursorShape: Qt.PointingHandCursor }
-						TapHandler {
-							acceptedButtons: Qt.LeftButton
-							onTapped: {
-								var p = parent.parent.parent.profile
-								if (!p) return
-								if (p.active) VpnModel.disconnectProfile(p.uuid)
-								else          VpnModel.connectProfile(p.uuid)
-								popup.vpnMenuUuid = ""
-							}
-						}
-					}
-
-					// Изменить — открывает nm-connection-editor с этим профилем.
-					Rectangle {
-						Layout.fillWidth: true
-						implicitHeight: 28
-						radius: Theme.networkRowRadius
-						color: editHover.hovered ? Theme.networkRowHoverBg : "transparent"
-						Behavior on color { ColorAnimation { duration: Theme.animFast } }
-
-						RowLayout {
-							anchors.fill: parent
-							anchors.leftMargin: 10
-							spacing: 8
-							Text {
-								text: "edit"
-								font.family: Theme.iconFamily
-								font.pixelSize: 12
-								color: Theme.fgSubtle
-							}
-							Text {
-								Layout.fillWidth: true
-								text: "Изменить..."
-								color: Theme.fg
-								font.family: Theme.fontFamily
-								font.pixelSize: Theme.networkRowMetaSize
-							}
-						}
-						HoverHandler { id: editHover; cursorShape: Qt.PointingHandCursor }
-						TapHandler {
-							acceptedButtons: Qt.LeftButton
-							onTapped: {
-								var p = parent.parent.parent.profile
-								if (!p) return
-								VpnModel.openEditor(p.uuid)
-								popup.vpnMenuUuid = ""
-							}
-						}
-					}
-
-					// Удалить — без подтверждения (можно добавить позже).
-					Rectangle {
-						Layout.fillWidth: true
-						implicitHeight: 28
-						radius: Theme.networkRowRadius
-						color: deleteHover.hovered ? Theme.networkRowHoverBg : "transparent"
-						Behavior on color { ColorAnimation { duration: Theme.animFast } }
-
-						RowLayout {
-							anchors.fill: parent
-							anchors.leftMargin: 10
-							spacing: 8
-							Text {
-								text: "delete"
-								font.family: Theme.iconFamily
-								font.pixelSize: 12
-								color: Theme.statusError
-							}
-							Text {
-								Layout.fillWidth: true
-								text: "Удалить"
-								color: Theme.statusError
-								font.family: Theme.fontFamily
-								font.pixelSize: Theme.networkRowMetaSize
-							}
-						}
-						HoverHandler { id: deleteHover; cursorShape: Qt.PointingHandCursor }
-						TapHandler {
-							acceptedButtons: Qt.LeftButton
-							onTapped: {
-								var p = parent.parent.parent.profile
-								if (!p) return
-								VpnModel.removeProfile(p.uuid)
-								popup.vpnMenuUuid = ""
+					HoverHandler { id: vpnRowHover; cursorShape: Qt.PointingHandCursor }
+					TapHandler {
+						acceptedButtons: Qt.LeftButton
+						onTapped: {
+							if (!parent.profile) return
+							if (parent.profile.active) {
+								VpnModel.disconnectProfile(parent.profile.uuid)
+							} else {
+								VpnModel.connectProfile(parent.profile.uuid)
 							}
 						}
 					}

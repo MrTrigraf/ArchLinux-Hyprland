@@ -36,18 +36,18 @@ QtObject {
     // ─── Шрифты ────────────────────────────────────────────────────────────
     readonly property string fontFamily:    "JetBrainsMono Nerd Font"
     readonly property string iconFamily:    "Material Symbols Rounded"
-    readonly property int    iconSizeBar:   22        // размер иконок в баре
+    readonly property int    iconSizeBar:   20        // размер иконок в баре
     readonly property int    fontSizeBar:   16        // размер текста (часы и т.п.)
     readonly property int    fontSizeSmall: 11        // вторичный текст (%, RU/EN)
 
     // ─── Геометрия бара ────────────────────────────────────────────────────
-    readonly property real   barWidthRatio: 0.60      // 52% от Screen.width
+    readonly property real   barWidthRatio: 0.60      // 60% от Screen.width
     readonly property int    barHeight:     42
     readonly property int    barRadius:     0         // 0 = прилипает к низу без округлений снизу
                                                       // округление верхних углов делается отдельно
     readonly property int    barRadiusTop:  14        // округление верхних углов бара
     readonly property int    sectionGap:    14        // расстояние между секциями
-    readonly property int    iconGap:       14        // расстояние между иконками внутри группы
+    readonly property int    iconGap:       10        // расстояние между иконками внутри группы
     readonly property int    sectionPaddingH: 0       // горизонтальный padding внутри группы
     readonly property int    underlineHeight: 2       // толщина подчёркивания
 	readonly property int    sectionBottomMargin: 5   // отступ секции от низа бара
@@ -72,7 +72,9 @@ QtObject {
     // Цвет текста на accent-фоне (hover/focus пункта). Тёмный тон kanagawa-paper,
     // читаемо на лавандовом #b4a7b5. Если в будущем accent сменится — поправить здесь.
 	readonly property color  popupItemHoverFg:    "#1F1F28"
-	readonly property color sectionBg: Qt.alpha("#363646", 0.96)
+	readonly property color sectionBg: Qt.rgba(0x36/255, 0x36/255, 0x46/255, 0.96)
+	readonly property color bg: popupItemHoverFg
+	readonly property int popupSideMargin: 8
 
 	readonly property int sectionPillRadius: 10
 	readonly property int sectionPillPaddingH: 8

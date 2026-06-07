@@ -34,6 +34,7 @@ PanelWindow {
 
 	signal rightClockClicked(int iconLeftX)
 	signal rightVolumeClicked(int iconLeftX)
+	signal rightNetworkClicked(int iconLeftX)
 	signal rightBatteryClicked(int iconLeftX)
 
     // ─── Layer-shell параметры ───────────────────────────────────────────
@@ -48,7 +49,7 @@ PanelWindow {
         bottom: true
     }
 
-    // ─── Боковые отступы для визуальной ширины 52% от экрана ─────────────
+    // ─── Боковые отступы для визуальной ширины 60% от экрана ─────────────
     margins {
         left:   Math.round(screen.width * (1 - Theme.barWidthRatio) / 2)
         right:  Math.round(screen.width * (1 - Theme.barWidthRatio) / 2)
@@ -118,8 +119,9 @@ PanelWindow {
 
 			barWindow: bar
 
-			onClockClicked: (x) => bar.rightClockClicked(x)
-			onVolumeClicked: (x) => bar.rightVolumeClicked(x)
+			onClockClicked:   (x) => bar.rightClockClicked(x)
+			onVolumeClicked:  (x) => bar.rightVolumeClicked(x)
+			onNetworkClicked: (x) => bar.rightNetworkClicked(x)
 			onBatteryClicked: (x) => bar.rightBatteryClicked(x)
         }
 		// ─── Tray-секция: прибита к ЛЕВОЙ грани правой секции ────────────
