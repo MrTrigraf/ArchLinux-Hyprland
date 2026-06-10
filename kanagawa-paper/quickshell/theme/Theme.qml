@@ -231,4 +231,25 @@ QtObject {
 	readonly property color networkSignalFull: fg
 	readonly property color networkSignalMid:  fgSubtle
 	readonly property color networkSignalLow:  fgMuted
+
+	// ─── Bluetooth (в network popup) ─────────────────────────────────────
+
+	// Шапка-селектор: цвета для активной BT-строки (вариант 3 — параллель
+	// с networkActiveBgOk/Error, но в лавандовом тоне акцента).
+	readonly property color networkActiveBgBt:     Qt.rgba(0xb4/255, 0xa7/255, 0xb5/255, 0.16)
+	readonly property color networkActiveBorderBt: accent
+
+	// Opacity неактивной строки шапки-селектора (когда выбрана другая
+	// вкладка). 0.55 — приглушение, читаемое, но явно «не выбрано».
+	readonly property real networkSelectorDimOpacity: 0.55
+
+	// Лимит видимых BT-устройств до появления скролла (как networkMaxVisibleWifi).
+	readonly property int networkMaxVisibleBt: 5
+
+	// Размер мини-индикатора батареи у BT-устройства (наушники сообщают %).
+	readonly property int networkBatteryIconSize: networkRowIconSize
+
+	// ─── Bluetooth-индикатор в баре (мини-глиф справа от network) ────────
+	readonly property int barBtIndicatorSize: 14
+	readonly property int barBtIndicatorGap:  2    // мини-зазор от network-глифа
 }

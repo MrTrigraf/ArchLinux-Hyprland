@@ -14,7 +14,9 @@ Variants {
 
     delegate: QtObject {
         id: perScreen
-        required property var modelData
+		required property var modelData
+		Component.onCompleted: console.log("[shell] delegate created for screen:", modelData.name, "id:", modelData.serialNumber)
+		Component.onDestruction: console.log("[shell] delegate DESTROYED for screen:", modelData ? modelData.name : "?")
 
         // ─── Сам бар ─────────────────────────────────────────────────────
         property Bar bar: Bar {

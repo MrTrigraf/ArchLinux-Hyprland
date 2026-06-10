@@ -69,13 +69,25 @@ WrapperRectangle {
             }
         }
 
-        // ─── 2. Network-иконка ────────────────────────────────────────────
+        // ─── 2. Network-иконка + BT-индикатор (вариант C) ─────────────────
         // Приоритет глифа: Wi-Fi (с градацией по сигналу) → Ethernet → off.
-        // Цвет — два состояния: Theme.fg (есть коннект) / Theme.statusError
-        // (нет связи). При hover — Theme.accent, как у других слотов.
+        // Цвет основного глифа: два состояния — Theme.fg (есть коннект) /
+        // Theme.statusError (нет связи). При hover — Theme.accent.
+        //
+        // Справа от основного глифа — мини-индикатор BT. Появляется ТОЛЬКО
+        // когда есть активное BT-устройство (BluetoothModel.iconGlyph !== "").
+        // В остальное время слот по ширине равен одному network-глифу —
+        // layout стабилен в 99% времени (по принципу: «BT либо подключён,
+        // либо нет»). Цвет BT-индикатора — Theme.accent (лаванда), не
+        // меняется при hover, чтобы он визуально не сливался с network.
+        //
+        // TapHandler/HoverHandler — на уровне Item, поэтому клик в любую
+        // точку слота (хоть в network-глиф, хоть в BT-индикатор) открывает
+        // один и тот же NetworkPopup. Координата выезда попапа — левый
+        // край слота (по mapToItem), от появления BT-глифа не зависит.
         Item {
             id: networkSlot
-            implicitWidth:  Theme.volumeIconSize
+            implicitWidth:  networkRow.implicitWidth
             implicitHeight: Theme.volumeIconSize
 
             readonly property bool isHovered: networkHover.hovered
@@ -92,19 +104,42 @@ WrapperRectangle {
                 return "signal_wifi_off"
             }
 
-            Text {
-                anchors.fill: parent
-                text: networkSlot.iconGlyph
-                color: networkSlot.isHovered
-                    ? Theme.accent
-                    : (NetworkModel.anyConnected ? Theme.fg : Theme.statusError)
-                font.family: Theme.iconFamily
-                font.pixelSize: Theme.volumeIconSize
-                horizontalAlignment: Text.AlignHCenter
-                verticalAlignment: Text.AlignVCenter
+            Row {
+                id: networkRow
+                anchors.verticalCenter: parent.verticalCenter
+                spacing: Theme.barBtIndicatorGap
 
-                Behavior on color {
-                    ColorAnimation { duration: Theme.animFast }
+                // Основной глиф (network).
+                Text {
+                    anchors.verticalCenter: parent.verticalCenter
+                    text: networkSlot.iconGlyph
+                    color: networkSlot.isHovered
+                        ? Theme.accent
+                        : (NetworkModel.anyConnected ? Theme.fg : Theme.statusError)
+                    font.family: Theme.iconFamily
+                    font.pixelSize: Theme.volumeIconSize
+                    horizontalAlignment: Text.AlignHCenter
+                    verticalAlignment: Text.AlignVCenter
+
+                    Behavior on color {
+                        ColorAnimation { duration: Theme.animFast }
+                    }
+                }
+
+                // Мини-индикатор BT (только при активном коннекте — вариант C).
+                Text {
+                    anchors.verticalCenter: parent.verticalCenter
+                    visible: BluetoothModel.iconGlyph !== ""
+                    text: BluetoothModel.iconGlyph
+                    color: BluetoothModel.iconColor
+                    font.family: Theme.iconFamily
+                    font.pixelSize: Theme.barBtIndicatorSize
+                    horizontalAlignment: Text.AlignHCenter
+                    verticalAlignment: Text.AlignVCenter
+
+                    Behavior on color {
+                        ColorAnimation { duration: Theme.animFast }
+                    }
                 }
             }
 
