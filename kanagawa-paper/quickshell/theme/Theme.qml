@@ -223,8 +223,8 @@ QtObject {
 	readonly property int networkSectionLabelPadV: 4
 
 	// Лимиты до появления вертикального скролла внутри списка.
-	readonly property int networkMaxVisibleWifi: 5
-	readonly property int networkMaxVisibleVpn:  5
+	readonly property int networkMaxVisibleWifi: 4
+	readonly property int networkMaxVisibleVpn:  4
 
 	// Градация цвета иконки Wi-Fi в зависимости от уровня сигнала.
 	// signalStrength ∈ [0..1]: >=0.75 — full, 0.50..0.74 — mid, <0.50 — low.
@@ -244,7 +244,7 @@ QtObject {
 	readonly property real networkSelectorDimOpacity: 0.55
 
 	// Лимит видимых BT-устройств до появления скролла (как networkMaxVisibleWifi).
-	readonly property int networkMaxVisibleBt: 5
+	readonly property int networkMaxVisibleBt: 4
 
 	// Размер мини-индикатора батареи у BT-устройства (наушники сообщают %).
 	readonly property int networkBatteryIconSize: networkRowIconSize
