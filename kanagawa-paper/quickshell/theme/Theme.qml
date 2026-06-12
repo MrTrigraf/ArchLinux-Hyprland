@@ -252,4 +252,109 @@ QtObject {
 	// ─── Bluetooth-индикатор в баре (мини-глиф справа от network) ────────
 	readonly property int barBtIndicatorSize: 14
 	readonly property int barBtIndicatorGap:  2    // мини-зазор от network-глифа
+
+	// ─── Notifications: попап центра уведомлений ─────────────────────────
+
+	readonly property int  notifPopupWidth:           340
+	readonly property int  notifPopupMaxVisibleRows:  5      // строк без скролла
+	readonly property int  notifItemHeightCollapsed:  64     // строка в свёрнутом виде
+	readonly property int  notifItemSpacing:          6      // gap между строками
+	readonly property int  notifItemRadius:           8
+	readonly property int  notifItemPadH:             10
+	readonly property int  notifItemPadV:             8
+	readonly property int  notifItemStripeW:          4      // полоска tier'а слева
+
+	// Action-bar в шапке попапа — 3 иконки-кнопки (sound / DnD / clear).
+	readonly property int  notifActionBarHeight:      40
+	readonly property int  notifActionBtnSize:        32     // квадратная кнопка
+	readonly property int  notifActionBtnRadius:      8
+	readonly property int  notifActionBtnIconSize:    18
+	readonly property int  notifActionBtnGap:         4
+
+	// Высота "зоны списка". В неё же рендерится пустое состояние —
+	// размер попапа от count=0 не зависит.
+	readonly property int  notifPopupListHeight:
+		notifPopupMaxVisibleRows * notifItemHeightCollapsed
+		+ (notifPopupMaxVisibleRows - 1) * notifItemSpacing
+
+	readonly property int  notifPopupSeparatorH:      1      // тонкая линия header | list
+
+	// КОНСТАНТА — суммарная высота попапа.
+	readonly property int  notifPopupContentHeight:
+		notifActionBarHeight
+		+ notifPopupSeparatorH
+		+ notifPopupListHeight
+		+ 2 * popupContentPadding
+
+	// ─── Notifications: всплывающие toast'ы ──────────────────────────────
+	readonly property int  notifToastWidth:           360
+	readonly property int  notifToastSpacing:         8      // gap между toast'ами
+	readonly property int  notifToastEdgeMargin:      12     // от правого края экрана
+	readonly property int  notifToastTopMargin:       12     // от верха экрана
+	readonly property int  notifToastMaxVisible:      3      // больше — в очередь до места
+	readonly property int  notifToastRadius:          10
+	readonly property int  notifToastPadH:            12
+	readonly property int  notifToastPadV:            10
+	readonly property int  notifToastStripeW:         4      // полоска класса слева
+	readonly property int  notifToastStripeWNormal:   3      // у Normal — тоньше
+	readonly property int  notifToastIconSize:        40     // appIcon / image слева
+
+	// Длительность жизни (мс). 0 = висит до клика. Если клиент прислал
+	// собственный expireTimeout > 0 — берём его (см. NotificationService).
+	readonly property int  notifLifetimeNormalMs:     4000   // 3-5 c
+	readonly property int  notifLifetimeSystemMs:     8000  // 10-15 c
+	readonly property int  notifLifetimeCriticalMs:   0      // никогда
+
+	// ─── Notifications: иконка-триггер в RightSection ────────────────────
+	readonly property int  notifBarIconSize:          iconSizeBar  // 20, общий ритм
+	readonly property int  notifBarBadgeSize:         14           // диаметр бейджа
+	readonly property int  notifBarBadgeFontSize:     9
+	readonly property int  notifBarBadgeOffsetX:      6            // смещение от центра иконки
+	readonly property int  notifBarBadgeOffsetY:     -5
+
+	// ─── Notifications: цвета классов ────────────────────────────────────
+	// Полоска слева (одинаково в попапе и в toast'е):
+	readonly property color notifStripeNormal:        accent            // лаванда
+	readonly property color notifStripeSystem:        statusCaution     // приглушённый жёлтый
+	readonly property color notifStripeCritical:      statusError       // мягкий красный
+
+	// Фон карточки уведомления в попапе:
+	readonly property color notifBgNormal:            inactiveAlt
+	readonly property color notifBgSystem:            inactiveAlt
+	readonly property color notifBgCritical:          Qt.rgba(0xc4/255, 0x74/255, 0x6e/255, 0.18)
+
+	// Фон одного toast'а:
+	readonly property color notifToastBgNormal:       background
+	readonly property color notifToastBgSystem:       background
+	readonly property color notifToastBgCritical:     Qt.rgba(0xc4/255, 0x74/255, 0x6e/255, 0.18)
+
+	// ─── Notifications: текст в карточке и тосте ─────────────────────────
+	readonly property int   notifAppNameSize:         12     // "Telegram · сейчас"
+	readonly property int   notifSummarySize:         12     // bold заголовок
+	readonly property int   notifBodySize:            11     // приглушённый body
+	readonly property int   notifTimeAgoSize:         10     // "5 мин"
+
+	readonly property color notifAppNameFg:           accent
+	readonly property color notifSummaryFg:           fg
+	readonly property color notifBodyFg:              fg
+	readonly property color notifTimeAgoFg:           accent
+
+	// Для critical-карточки текст имеет тёплый оттенок — на красноватом
+	// фоне обычный fg ("#DCD7BA") смотрится холодно.
+	readonly property color notifSummaryFgCritical:   accent
+	readonly property color notifBodyFgCritical:      accent
+
+	// ─── Notifications: action-bar в шапке попапа ────────────────────────
+	// 3 иконки: sound / DnD / clear. Цвета по состоянию.
+	readonly property color notifIconActive:          fg              // звук вкл, DnD выкл
+	readonly property color notifIconMuted:           fgMuted         // звук выкл, DnD вкл
+	readonly property color notifIconActiveHover:     accent
+
+	// Корзина: зелёная при наличии уведомлений, красная при пустом списке.
+	readonly property color notifTrashOk:             statusOk
+	readonly property color notifTrashEmpty:          statusError
+
+	// ─── Notifications: бейдж непрочитанного на колокольчике ─────────────
+	readonly property color notifBadgeBg:             accent
+	readonly property color notifBadgeFg:             popupItemHoverFg
 }

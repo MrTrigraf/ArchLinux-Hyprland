@@ -24,6 +24,7 @@ WrapperRectangle {
 	signal volumeClicked(int volumeLocalX)
 	signal batteryClicked(int batteryLocalX)
 	signal networkClicked(int networkLocalX)
+	signal notificationsClicked(int notificationsLocalX)
 
     // ─── Системные часы (реактивно по минуте) ─────────────────────────────
     SystemClock {
@@ -69,22 +70,7 @@ WrapperRectangle {
             }
         }
 
-        // ─── 2. Network-иконка + BT-индикатор (вариант C) ─────────────────
-        // Приоритет глифа: Wi-Fi (с градацией по сигналу) → Ethernet → off.
-        // Цвет основного глифа: два состояния — Theme.fg (есть коннект) /
-        // Theme.statusError (нет связи). При hover — Theme.accent.
-        //
-        // Справа от основного глифа — мини-индикатор BT. Появляется ТОЛЬКО
-        // когда есть активное BT-устройство (BluetoothModel.iconGlyph !== "").
-        // В остальное время слот по ширине равен одному network-глифу —
-        // layout стабилен в 99% времени (по принципу: «BT либо подключён,
-        // либо нет»). Цвет BT-индикатора — Theme.accent (лаванда), не
-        // меняется при hover, чтобы он визуально не сливался с network.
-        //
-        // TapHandler/HoverHandler — на уровне Item, поэтому клик в любую
-        // точку слота (хоть в network-глиф, хоть в BT-индикатор) открывает
-        // один и тот же NetworkPopup. Координата выезда попапа — левый
-        // край слота (по mapToItem), от появления BT-глифа не зависит.
+        // ─── 2. Network-иконка + BT-индикатор  ─────────────────
         Item {
             id: networkSlot
             implicitWidth:  networkRow.implicitWidth
@@ -268,7 +254,61 @@ WrapperRectangle {
                 id: clockHover
                 cursorShape: Qt.PointingHandCursor
             }
-        }
+		}
+
+		// ─── Notifications: колокольчик с точкой-индикатором ─────────────
+		Item {
+			id: notificationsSlot
+			implicitWidth:  Theme.notifBarIconSize
+			implicitHeight: Theme.notifBarIconSize
+
+			readonly property bool isHovered: notificationsHover.hovered
+			readonly property bool isDndOn:   NotificationService.dndEnabled
+			readonly property bool isMuted:   NotificationService.soundMuted
+			readonly property int  unread:    NotificationService.unreadCount
+
+			HoverHandler { id: notificationsHover; cursorShape: Qt.PointingHandCursor }
+
+			Text {
+			id: notificationsGlyph
+			anchors.fill: parent
+			text: notificationsSlot.isDndOn ? "notifications_off" : "notifications"
+			font.family: Theme.iconFamily
+		    font.pixelSize: Theme.notifBarIconSize
+			horizontalAlignment: Text.AlignHCenter
+	        verticalAlignment: Text.AlignVCenter
+		    color: notificationsSlot.isDndOn ? Theme.fgMuted
+				: notificationsSlot.isHovered ? Theme.accent
+											: Theme.fg
+			Behavior on color { ColorAnimation { duration: Theme.animFast } }
+		}
+
+		// Точка-индикатор в правом-верхнем углу глифа.
+		Rectangle {
+			id: dot
+	        visible: notificationsSlot.unread > 0
+		    width: 6
+			height: 6
+	        radius: 3
+		    color: Theme.notifBadgeBg          // фиолетовый
+			anchors.right: notificationsGlyph.right
+	        anchors.top: notificationsGlyph.top
+		    anchors.rightMargin: 1
+			anchors.topMargin: 2
+			}
+
+			TapHandler {
+				acceptedButtons: Qt.LeftButton
+				onTapped: {
+					var localX = 0
+					if (root.barWindow !== null && root.barWindow !== undefined) {
+						var p = notificationsSlot.mapToItem(root.barWindow.contentItem, 0, 0)
+						localX = Math.round(p.x)
+					}
+					root.notificationsClicked(localX)
+				}
+			}
+		}
 
 		// ─── 5. Battery icon (правее часов, только ноут) ──────────────────
         // --- desktop: comment out the battery block (no battery) ---

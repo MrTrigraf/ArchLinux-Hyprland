@@ -36,6 +36,7 @@ PanelWindow {
 	signal rightVolumeClicked(int iconLeftX)
 	signal rightNetworkClicked(int iconLeftX)
 	signal rightBatteryClicked(int iconLeftX)
+	signal rightNotificationsClicked(int iconLeftX)
 
     // ─── Layer-shell параметры ───────────────────────────────────────────
     WlrLayershell.namespace: "qs-bar"
@@ -122,6 +123,7 @@ PanelWindow {
 			onClockClicked:   (x) => bar.rightClockClicked(x)
 			onVolumeClicked:  (x) => bar.rightVolumeClicked(x)
 			onNetworkClicked: (x) => bar.rightNetworkClicked(x)
+			onNotificationsClicked: (x) => bar.rightNotificationsClicked(x)
 			onBatteryClicked: (x) => bar.rightBatteryClicked(x)
         }
 		// ─── Tray-секция: прибита к ЛЕВОЙ грани правой секции ────────────

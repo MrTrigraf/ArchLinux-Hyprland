@@ -5,12 +5,15 @@ import Quickshell.Io
 import "./modules/bar"
 import "./modules/popups"
 import "./modules/services/"
+import "./modules/notifications"
 import "./theme"
 
 // shell.qml - точка входа Quickshell.
 
 Variants {
-    model: Quickshell.screens
+	model: Quickshell.screens
+
+	Component.onCompleted: NotificationService.server
 
     delegate: QtObject {
         id: perScreen
@@ -69,6 +72,12 @@ Variants {
 				batteryPopup.anchorX = bar.width - 0 - batteryPopup.contentWidth
 				PopupManager.toggle(batteryPopup)
 			}
+
+			onRightNotificationsClicked: (x) => {
+			notificationsPopup.parentBar = bar
+			notificationsPopup.anchorX = bar.width - 0 - notificationsPopup.contentWidth
+			PopupManager.toggle(notificationsPopup)
+			}
         }
 
         // ─── Попапы ─────────────────────────────────────────────────────
@@ -80,6 +89,8 @@ Variants {
 		property VolumePopup volumePopup: VolumePopup {}
 		property BatteryPopup batteryPopup: BatteryPopup {}
 		property NetworkPopup networkPopup: NetworkPopup {}
+		property NotificationsPopup notificationsPopup: NotificationsPopup {}
+		property var toasts: ToastsWindow { screen: perScreen.modelData }
 
 		property Process terminakProc: Process {
 			command: ["hyprctl", "dispatch", "hl.dsp.exec_cmd(\"kitty --class floating-kitty\")"]
