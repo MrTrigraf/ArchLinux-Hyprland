@@ -7,11 +7,14 @@ Item {
     // ─── Публичные свойства ─────────────────────────────────────────────
     property string label: ""
     property real value: 0        // 0..1
-    property bool muted: false
+	property bool muted: false
+
+	property bool muteIcon: false
 
     // Сигнал «пользователь подвинул слайдер». Родитель ловит и пишет
     // в источник (sink.audio.volume / stream.audio.volume).
-    signal userChanged(real newValue)
+	signal userChanged(real newValue)
+	signal muteToggled()
 
     // ─── Размеры ────────────────────────────────────────────────────────
     implicitWidth: 200
@@ -21,19 +24,66 @@ Item {
                   + Theme.volumeSliderLabelGap
                   + Theme.volumeSliderHandleSize
 
-    // ─── Ряд "подпись + значение" ───────────────────────────────────────
+	// ─── Ряд "[mute?] подпись ↔️ значение" ────────────────────────────────
+    // Высота ряда — max(textSize, muteIconSize), потому что иконка mute
+    // выше шрифта label. Без max'а иконка клипалась бы.
     Item {
         id: labelRow
         anchors.left: parent.left
         anchors.right: parent.right
         anchors.top: parent.top
-        height: Theme.volumeSliderLabelSize
+        height: Math.max(Theme.volumeSliderLabelSize,
+                         root.muteIcon ? Theme.volumeSliderMuteIconSize : 0)
 
-        // Подпись слева. elide — если приложение с длинным именем.
+        // Mute-кнопка слева. Видна только при muteIcon: true.
+        // Глиф меняется по root.muted (входящий проп от родителя).
         Text {
+            id: muteBtn
+            visible: root.muteIcon
             anchors.left: parent.left
             anchors.verticalCenter: parent.verticalCenter
-            // Оставляем место справа для значения "100%".
+            width:  visible ? Theme.volumeSliderMuteIconSize : 0
+            height: Theme.volumeSliderMuteIconSize
+
+            text: root.muted ? "volume_off" : "volume_up"
+            font.family: Theme.iconFamily
+            font.pixelSize: Theme.volumeSliderMuteIconSize
+            horizontalAlignment: Text.AlignHCenter
+            verticalAlignment: Text.AlignVCenter
+
+            // Цвет: при mute — fgMuted, при hover — accent, иначе fg.
+            // muteHover.hovered — реактивный signal от HoverHandler ниже.
+            color: muteHover.hovered
+                ? Theme.volumeSliderMuteFgHover
+                : (root.muted
+                    ? Theme.volumeSliderMuteFgMuted
+                    : Theme.volumeSliderMuteFg)
+
+            Behavior on color {
+                ColorAnimation { duration: Theme.animFast }
+            }
+
+            HoverHandler {
+                id: muteHover
+                cursorShape: Qt.PointingHandCursor
+            }
+
+            // TapHandler даёт нам тап без конфликта с MouseArea трека
+            // ниже (track-MouseArea не пересекается с этой зоной по
+            // координатам). Сигналим наружу, состояние не меняем сами.
+            TapHandler {
+                acceptedButtons: Qt.LeftButton
+                onTapped: root.muteToggled()
+            }
+        }
+
+        // Подпись. Левый край — после mute-кнопки (с gap), правый —
+        // до valueText. Если muteIcon выключен, muteBtn.width == 0 и
+        // леворазмещение совпадает с прежним поведением.
+        Text {
+            anchors.left: muteBtn.right
+            anchors.leftMargin: root.muteIcon ? Theme.volumeSliderMuteGap : 0
+            anchors.verticalCenter: parent.verticalCenter
             anchors.right: valueText.left
             anchors.rightMargin: 8
 
@@ -56,7 +106,6 @@ Item {
             font.pixelSize: Theme.volumeSliderLabelSize
         }
     }
-
     // ─── Рельс с заполнением и handle ───────────────────────────────────
     Item {
         id: trackArea

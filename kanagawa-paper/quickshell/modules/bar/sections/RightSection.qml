@@ -157,9 +157,9 @@ WrapperRectangle {
 
             // Выбор глифа Material Symbols по уровню громкости и mute.
             // Hyprland Material Symbols входят в iconFamily.
-            readonly property string iconGlyph: {
-                if (VolumeModel.muted) return "volume_off"
-                var v = VolumeModel.volume
+			readonly property string iconGlyph: {
+				if (AudioOutputModel.muted) return "volume_off"
+                var v = AudioOutputModel.volume
                 if (v <= 0.33) return "volume_mute"
                 if (v <= 0.66) return "volume_down"
                 return "volume_up"
@@ -207,10 +207,10 @@ WrapperRectangle {
                     // Если sink в mute и юзер крутит вверх — снимаем mute.
                     // Если крутит вниз при mute — оставляем mute (логично:
                     // выкручиваешь "до тишины", повторная попытка не нужна).
-                    if (VolumeModel.muted && step > 0) {
-                        VolumeModel.toggleMute()
+                    if (AudioOutputModel.muted && step > 0) {
+                        AudioOutputModel.toggleMute()
                     }
-                    VolumeModel.changeVolume(step)
+                    AudioOutputModel.changeVolume(step)
                 }
             }
         }

@@ -56,9 +56,9 @@ Variants {
 			}
 
 			onRightVolumeClicked: (volumeLocalX) => {
-				volumePopup.parentBar = bar
-				volumePopup.anchorX = bar.width - 0 - volumePopup.contentWidth
-				PopupManager.toggle(volumePopup)
+				audioPopup.parentBar = bar
+				audioPopup.anchorX = bar.width - 0 - audioPopup.contentWidth
+				PopupManager.toggle(audioPopup)
 			}
 
 			onRightNetworkClicked: (networkLocalX) => {
@@ -86,7 +86,7 @@ Variants {
 		property PowerMenu powerMenu: PowerMenu {}
 		property WallpaperPicker wallpaperPicker: WallpaperPicker {}
 		property CalendarPopup calendarPopup: CalendarPopup {}
-		property VolumePopup volumePopup: VolumePopup {}
+		property AudioPopup audioPopup: AudioPopup {}
 		property BatteryPopup batteryPopup: BatteryPopup {}
 		property NetworkPopup networkPopup: NetworkPopup {}
 		property NotificationsPopup notificationsPopup: NotificationsPopup {}

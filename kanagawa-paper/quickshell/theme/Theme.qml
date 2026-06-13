@@ -152,7 +152,7 @@ QtObject {
     //   └─────────────────────────────┘
     readonly property int volumeSliderTrackHeight: 4    // толщина "рельса"
     readonly property int volumeSliderHandleSize:  14   // диаметр кругляшка
-    readonly property int volumeSliderLabelGap:    6    // gap между подписью и треком
+    readonly property int volumeSliderLabelGap:    3    // gap между подписью и треком
     readonly property int volumeSliderRowGap:      12   // gap между слайдерами в попапе
     readonly property int volumeSliderLabelSize:   12   // размер шрифта подписи и %
 
@@ -163,17 +163,111 @@ QtObject {
     readonly property color volumeSliderTrackFg:  accent           // заполненная часть рельса
     readonly property color volumeSliderHandleBg: accent           // кругляшек
     readonly property color volumeSliderHandleBgMuted: fgSubtle    // кругляшек при mute
-    readonly property color volumeSliderTrackFgMuted:  fgMuted     // заполнение при mute
+	readonly property color volumeSliderTrackFgMuted:  fgMuted     // заполнение при mute
+	// ─── Mute-кнопка слева от label (опциональна, см. VolumeSlider.muteIcon) ─
+    readonly property int   volumeSliderMuteIconSize:  16
+    readonly property int   volumeSliderMuteGap:        6   // gap "иконка mute label"
+    readonly property color volumeSliderMuteFg:         fg        // звук вкл
+    readonly property color volumeSliderMuteFgMuted:    fgMuted   // звук выкл
+    readonly property color volumeSliderMuteFgHover:    accent
 
-    // ─── Volume popup ───────────────────────────────────────────────────
-    // Ширина попапа. 260px достаточно для подписи приложения + значения
-    // справа без обрезки на типичных именах ("Discord", "Mozilla Firefox",
-    // "Spotify"). Если попадётся "Telegram Desktop — Saved Messages" —
-    // обрежется через elide; терпимо.
-    readonly property int volumePopupWidth:    260
-    readonly property int volumePopupRowGap:   volumeSliderRowGap   // gap между слайдерами
-    readonly property int volumePopupSeparator: 1                    // тонкая линия "Система | приложения"
-	readonly property color volumePopupSeparatorColor: fgMuted
+	// ─── Audio popup (общая геометрия и палитра) ────────────────────────
+    readonly property int audioPopupWidth:          320
+    readonly property int audioPopupContentPadding: popupContentPadding   // 8, общий с системой
+	readonly property int audioPopupTabsGap:        6        // gap после шапки-табов
+	readonly property int audioBodyBottomPadding:   6		 // отступ от нижней рамки
+
+    // Шапка-селектор Input / Output. Активная вкладка подсвечивается
+    // лавандовой заливкой + рамкой accent (тот же приём, что в NetworkPopup).
+    // Цвета и opacity reuse'аются из network-блока — единый визуальный язык.
+    readonly property int   audioTabsRowHeight:     32
+    readonly property int   audioTabRadius:         10
+    readonly property int   audioTabIconSize:       16
+    readonly property int   audioTabFontSize:       12
+    readonly property int   audioTabIconGap:        6        // gap "иконка подпись" внутри таба
+    readonly property int   audioTabHGap:           6        // gap между двумя табами
+    readonly property color audioTabActiveBg:       networkActiveBgBt      // accent ~16%
+    readonly property color audioTabActiveBorder:   networkActiveBorderBt  // accent
+    readonly property real  audioTabDimOpacity:     networkSelectorDimOpacity  // 0.55
+    readonly property color audioTabFg:             fg
+
+    // ─── Audio popup: Output-вкладка ────────────────────────────────────
+    // Строка выбора устройства вывода (pill-style: иконка + имя + chevron).
+    // При клике — inline-раскрытие списка sinks внутри попапа (без xdg_popup).
+    readonly property int   audioDeviceRowHeight:       36
+    readonly property int   audioDeviceRowRadius:       8
+    readonly property color audioDeviceRowBg:           sectionBg
+    readonly property int   audioDeviceRowIconSize:     18
+    readonly property int   audioDeviceRowChevronSize:  18
+    readonly property int   audioDeviceRowFontSize:     12
+    readonly property int   audioDeviceRowPaddingH:     10
+    readonly property int   audioDeviceRowGap:          8   // gap "иконка ↔️ имя ↔️ chevron"
+
+    // Inline-список sinks внутри Output-вкладки (раскрытие AudioDeviceSelector).
+    // До audioSelectorMaxVisible пунктов без скролла, дальше — скроллбар.
+    readonly property int audioSelectorItemHeight:    32
+    readonly property int audioSelectorMaxVisible:    4
+    readonly property int audioSelectorItemFontSize:  12
+    readonly property int audioSelectorItemPaddingH:  10
+	readonly property int audioSelectorItemRadius:    6
+	// Раскладка Output-вкладки: device-row → system-slider → sep → apps.
+    readonly property int   audioOutputRowGap:        6   // vertical gap
+    readonly property int   audioSeparatorHeight:     1
+    readonly property color audioSeparatorColor:      fgMuted
+    readonly property int   audioMaxVisibleApps:      2   // больше — скролл
+
+    // ─── Audio popup: Input-вкладка ─────────────────────────────────────
+    // Карточка-строка одного микрофона: имя + чек-кнопка справа +
+    // peak-meter + slider громкости устройства.
+    readonly property int   audioSourceRowHeight:        82   // вмещает name + meter + slider
+    readonly property int   audioSourceRowRadius:        8
+    readonly property int   audioSourceRowPaddingH:      10
+    readonly property int   audioSourceRowPaddingV:      8
+    readonly property int   audioSourceRowGap:           4    // между строками в списке
+    readonly property color audioSourceRowSelectedBg:    Qt.rgba(0xb4/255, 0xa7/255, 0xb5/255, 0.10)
+    readonly property int   audioSourceLabelFontSize:    12
+    readonly property int   audioMaxVisibleSources:      2
+
+    // Чек-кнопка "сделать дефолтным" (квадрат с галочкой).
+    readonly property int   audioCheckBtnSize:           24
+    readonly property int   audioCheckBtnRadius:         6
+    readonly property int   audioCheckBtnIconSize:       16
+    readonly property color audioCheckBtnActiveBg:       accent
+    readonly property color audioCheckBtnActiveFg:       popupItemHoverFg
+    readonly property color audioCheckBtnInactiveBorder: Qt.rgba(0xDC/255, 0xD7/255, 0xBA/255, 0.25)
+	readonly property color audioCheckBtnInactiveFg:     fgMuted
+	// Pill DEFAULT / SET DEFAULT справа в header'е (вариант C дизайна Input).
+    // Активный (этот source = default) — заполненная лавандовая капсула с
+    // тёмным текстом. Неактивный — контур + приглушённый текст.
+    readonly property int   audioDefaultPillHeight:       18
+    readonly property int   audioDefaultPillRadius:       9     // = height/2 → идеальная капсула
+    readonly property int   audioDefaultPillPaddingH:     8
+    readonly property int   audioDefaultPillFontSize:     9
+    readonly property color audioDefaultPillActiveBg:     accent
+    readonly property color audioDefaultPillActiveFg:     popupItemHoverFg
+    readonly property color audioDefaultPillInactiveBorder: Qt.rgba(0xDC/255, 0xD7/255, 0xBA/255, 0.30)
+    readonly property color audioDefaultPillInactiveFg:   fgMuted
+
+    // Иконка mic слева в header'е card-варианта. Размер согласован с
+    // audioDeviceRowIconSize (Output dropdown) — единый визуальный язык.
+    readonly property int   audioSourceMicIconSize:       18
+    readonly property int   audioSourceHeaderGap:         10    // gap между mic ↔️ name ↔️ pill
+
+    // Card-обводка selected-source: рамка accent + фон accent ~12%.
+    // Чуть плотнее, чем audioSourceRowSelectedBg, чтобы card-стиль читался.
+    readonly property color audioSourceCardBorderActive:  Qt.rgba(0xb4/255, 0xa7/255, 0xb5/255, 0.40)
+    readonly property int   audioSourceCardBorderWidth:   1
+
+    // ─── Peak meter (PwNodePeakMonitor → bar 0..1) ──────────────────────
+    // Attack — быстрый рост, decay — медленный спад: классическая VU-логика,
+    // чтобы peaks не дёргались как сейсмограф.
+    readonly property int   audioPeakMeterHeight:     6
+    readonly property int   audioPeakMeterRadius:     3
+    readonly property color audioPeakMeterBg:         Qt.rgba(0xDC/255, 0xD7/255, 0xBA/255, 0.12)
+    readonly property color audioPeakMeterFg:         statusOk   // обычный source
+    readonly property color audioPeakMeterFgActive:   accent     // выбранный default-source
+    readonly property int   audioPeakMeterAttackMs:    80
+    readonly property int   audioPeakMeterDecayMs:    250
 
 	// ─── Battery popup ───────────────────────────────────────────────────
 	readonly property int batteryPopupWidth: 240

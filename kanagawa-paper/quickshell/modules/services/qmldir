@@ -1,5 +1,4 @@
 singleton KeyboardLayoutModel 1.0 KeyboardLayoutModel.qml
-singleton VolumeModel 1.0 VolumeModel.qml
 singleton BatteryModel 1.0 BatteryModel.qml
 singleton BrightnessModel 1.0 BrightnessModel.qml
 singleton NetworkModel 1.0 NetworkModel.qml
@@ -7,3 +6,5 @@ singleton VpnModel 1.0 VpnModel.qml
 singleton BluetoothModel 1.0 BluetoothModel.qml
 singleton NotificationRules 1.0 NotificationRules.qml
 singleton NotificationService 1.0 NotificationService.qml
+singleton AudioOutputModel 1.0 AudioOutputModel.qml
+singleton AudioInputModel 1.0 AudioInputModel.qml
