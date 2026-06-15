@@ -1,0 +1,49 @@
+/*
+ * config.rasi — главный конфиг rofi
+ * ──────────────────────────────────
+ * Грузится через флаг -config из биндинга SUPER+R в keybindings.lua.
+ * Здесь — поведение лаунчера и параметры modi.
+ * Вид и палитра — theme.rasi и colors.rasi соответственно.
+ */
+
+configuration {
+    /* ── Активные modi (порядок = порядок кнопок в зоне 3) ───
+     * drun    — запуск .desktop-приложений
+     * files   — наш скрипт file-opener.sh
+     * window  — переключатель открытых окон по title/class
+     */
+    modes:                  "drun,files:~/.config/hypr/kanagawa-paper/rofi/scripts/file-opener.sh,window";
+
+    /* ── Иконки на кнопках mode-switcher (зона 3) ────────────
+     * Глифы — Nerd Font UTF-8 codepoints, скопированы из
+     * adi1090x/rofi/files/launchers/type-1/style-5.rasi
+     * (там они работают на JetBrainsMono Nerd Font — у нас тот же шрифт). */
+    display-drun:           "";
+    display-files:          "";
+    display-window:         "";
+
+    /* ── Иконки приложений в drun-листе ──────────────────────
+     * Сейчас icon-theme = hicolor (минимальный).
+     * TODO: после установки papirus в чате темы заменить на "Papirus-Dark". */
+    show-icons:             true;
+    icon-theme:             "hicolor";
+
+    /* ── Формат отображаемой строки в drun ───────────────────
+     * "{name}" — только имя приложения, без "(generic name)" в скобках,
+     * как у adi1090x в style-5. */
+    drun-display-format:    "{name}";
+
+    /* ── Формат строки в window ──────────────────────────────
+     * {w} = workspace, {c} = class, {t} = title. */
+    window-format:          "{t}: {c}";
+
+    /* ── Поиск ─────────────────────────────────────────────── */
+    case-sensitive:         false;
+    sort:                   true;
+    sorting-method:         "fzf";
+}
+
+/* ── Подключение темы ─────────────────────────────────────── */
+/* @theme сбрасывает дефолтную тему и грузит нашу как полную.
+   theme.rasi уже @import colors.rasi внутри себя. */
+@theme "/home/barmaley/.config/hypr/kanagawa-paper/rofi/theme.rasi"

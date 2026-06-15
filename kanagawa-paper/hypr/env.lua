@@ -21,6 +21,11 @@ hl.env("QT_QPA_PLATFORMTHEME", "qt5ct")
 hl.env("ELECTRON_OZONE_PLATFORM_HINT", "auto")
 hl.env("MOZ_ENABLE_WAYLAND", "1")
 
+---- awww ----
+hl.env("AWWW_TRANSITION", "fade")
+hl.env("AWWW_TRANSITION_DURATION", "3")
+hl.env("AWWW_TRANSITION_FPS", "60")
+
 ---- Desktop ----
 --hl.env("GBM_BACKEND", "nvidia-drm")
 --hl.env("__GLX_VENDOR_LIBRARY_NAME", "nvidia")
@@ -32,7 +37,3 @@ hl.env("MOZ_ENABLE_WAYLAND", "1")
 hl.env("LIBVA_DRIVER_NAME", "iHD")
 hl.env("VDPAU_DRIVER", "va_gl") --нужен пакет libvdpau-va-gl
 
----- awww ----
-hl.env("AWWW_TRANSITION", "fade")
-hl.env("AWWW_TRANSITION_DURATION", "3")
-hl.env("AWWW_TRANSITION_FPS", "60")

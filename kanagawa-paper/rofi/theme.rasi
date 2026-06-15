@@ -1,0 +1,172 @@
+/*
+ * theme.rasi — структура виджетов и геометрия rofi
+ * ────────────────────────────────────────────────
+ * Палитра — colors.rasi (@import ниже).
+ * Размеры:
+ *  - окно (width):           % от монитора
+ *  - всё внутри окна:        em (масштабируется с font-size)
+ *  - количество строк listview: фиксированное число
+ *
+ * file-opener: правая колонка (серый путь) выравнивается через
+ * element-text { tab-stops: [ ... ]; }. Табстоп задан в % ширины окна,
+ * поэтому позиция одинакова на любом мониторе (мульти-монитор-safe).
+ */
+
+@import "colors.rasi"
+
+/* ── Глобальные дефолты для всех виджетов ─────────────────── */
+* {
+    font:               "JetBrainsMono Nerd Font 13";
+    background-color:   transparent;
+    text-color:         @fg;
+
+    radius-pill:        0.5em;
+}
+
+/* ── Корневое окно ────────────────────────────────────────── */
+window {
+    width:              40%;
+
+    location:           center;
+    anchor:             center;
+
+    background-color:   @bg-window;
+    border:             1px solid;
+    border-color:       @edge;
+    border-radius:      1em;
+
+    padding:            0.6em;
+
+    children:           [ mainbox ];
+}
+
+/* ── Внутренний контейнер ─────────────────────────────────── */
+mainbox {
+    spacing:            0.5em;
+    padding:            0;
+    background-color:   transparent;
+    children:           [ inputbar, listview ];
+}
+
+/* ── Зона 1 + 3: поле поиска и mode-switcher в одной строке ─ */
+inputbar {
+    padding:            0.5em 0.85em;
+    spacing:            0.6em;
+    background-color:   @bg-input;
+    border-radius:      @radius-pill;
+    children:           [ textbox-prompt-colon, entry, mode-switcher ];
+}
+
+textbox-prompt-colon {
+    str:                "";
+    expand:             false;
+    text-color:         @fg-subtle;
+    vertical-align:     0.5;
+    background-color:   transparent;
+    padding:            0 0.2em 0 0;
+}
+
+entry {
+    placeholder:        "Search…";
+    placeholder-color:  @fg-subtle;
+    text-color:         @fg;
+    vertical-align:     0.5;
+    background-color:   transparent;
+    cursor:             text;
+}
+
+/* ── Зона 2: список ───────────────────────────────────────── */
+listview {
+    lines:              8;
+    columns:            1;
+    spacing:            0.15em;
+    padding:            0;
+    fixed-height:       true;
+    scrollbar:          true;
+    background-color:   transparent;
+    border:             0;
+    cursor:             "default";
+}
+
+scrollbar {
+    width:              0.2em;
+    handle-width:       0.2em;
+    handle-color:       @accent;
+    background-color:   transparent;
+    border-radius:      0.1em;
+}
+
+/* ── Элемент списка ───────────────────────────────────────────
+ * Сейчас иконка = ГЛИФ внутри текста (рисует file-opener.sh),
+ * поэтому element-icon из children УБРАН — иначе слева пустой отступ.
+ *
+ * КОГДА перейдёшь на icon-theme (Papirus и поле icon в скрипте):
+ *   1. верни children:  [ element-icon, element-text ];
+ *   2. раскомментируй блок element-icon ниже;
+ *   3. в скрипте убери глиф из disp и добавь поле icon (см. заметку там).
+ */
+element {
+    padding:            0.45em 0.9em;
+    spacing:            0;                /* было 0.9em под icon↔text; без иконки не нужно */
+    border-radius:      @radius-pill;
+    background-color:   transparent;
+    text-color:         @fg;
+    cursor:             pointer;
+    children:           [ element-text ];
+}
+
+element selected {
+    background-color:   @accent;
+    text-color:         @fg-on-accent;
+}
+
+/*
+element-icon {
+    size:               1.4em;
+    vertical-align:     0.5;
+    background-color:   transparent;
+}
+*/
+
+/* ── Текст строки + правая колонка ────────────────────────────
+ * tab-stops: позиция, на которую встаёт серый путь после \t.
+ *
+ * ВАЖНО: distance в % считается от ШИРИНЫ МОНИТОРА, а не окна.
+ * Окно у нас width:40%. Чтобы путь стоял на ~55% ВНУТРИ окна:
+ *     0.55 × 40% = 22% монитора  →  tab-stops: [ 22% ];
+ * Формула:  tab% (монитор) = желаемая_доля_внутри_окна × ширина_окна_в_%
+ * Если поменяешь width окна — пересчитай это число по формуле выше.
+ *
+ * Почему % монитора, а не окна: так позиция масштабируется
+ * пропорционально на ЛЮБОМ мониторе (мульти-монитор-safe).
+ *
+ * markup НЕ задаём здесь — включён per-row из скрипта (markup-rows).
+ */
+element-text {
+    vertical-align:     0.5;
+    background-color:   transparent;
+    text-color:         inherit;
+    cursor:             inherit;
+    tab-stops:          [ 22% ];
+}
+
+/* ── Зона 3: mode-switcher ────────────────────────────────── */
+mode-switcher {
+    spacing:            0.3em;
+    background-color:   transparent;
+}
+
+button {
+    padding:            0.3em 0.7em;
+    border-radius:      0.6em;
+    background-color:   @bg-modi-idle;
+    text-color:         @fg;
+    horizontal-align:   0.5;
+    vertical-align:     0.5;
+    cursor:             pointer;
+}
+
+button selected {
+    background-color:   @accent;
+    text-color:         @fg-on-accent;
+}
