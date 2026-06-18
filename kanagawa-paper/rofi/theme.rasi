@@ -96,23 +96,15 @@ scrollbar {
     border-radius:      0.1em;
 }
 
-/* ── Элемент списка ───────────────────────────────────────────
- * Сейчас иконка = ГЛИФ внутри текста (рисует file-opener.sh),
- * поэтому element-icon из children УБРАН — иначе слева пустой отступ.
- *
- * КОГДА перейдёшь на icon-theme (Papirus и поле icon в скрипте):
- *   1. верни children:  [ element-icon, element-text ];
- *   2. раскомментируй блок element-icon ниже;
- *   3. в скрипте убери глиф из disp и добавь поле icon (см. заметку там).
- */
+/* ── Элемент списка ──────────────────────────────────── */
 element {
     padding:            0.45em 0.9em;
-    spacing:            0;                /* было 0.9em под icon↔text; без иконки не нужно */
+    spacing:            0.9em;            /* отступ между иконкой и текстом */
     border-radius:      @radius-pill;
     background-color:   transparent;
     text-color:         @fg;
     cursor:             pointer;
-    children:           [ element-text ];
+    children:           [ element-icon, element-text ];
 }
 
 element selected {
@@ -120,13 +112,11 @@ element selected {
     text-color:         @fg-on-accent;
 }
 
-/*
 element-icon {
     size:               1.4em;
     vertical-align:     0.5;
     background-color:   transparent;
 }
-*/
 
 /* ── Текст строки + правая колонка ────────────────────────────
  * tab-stops: позиция, на которую встаёт серый путь после \t.
@@ -157,6 +147,7 @@ mode-switcher {
 }
 
 button {
+    markup:             true;
     padding:            0.3em 0.7em;
     border-radius:      0.6em;
     background-color:   @bg-modi-idle;

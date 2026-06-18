@@ -18,15 +18,15 @@ configuration {
      * Глифы — Nerd Font UTF-8 codepoints, скопированы из
      * adi1090x/rofi/files/launchers/type-1/style-5.rasi
      * (там они работают на JetBrainsMono Nerd Font — у нас тот же шрифт). */
-    display-drun:           "";
-    display-files:          "";
-    display-window:         "";
+    display-drun:           "<span></span>";
+    display-files:          "<span>󰉋</span>";
+    display-window:         "<span></span>";
 
     /* ── Иконки приложений в drun-листе ──────────────────────
      * Сейчас icon-theme = hicolor (минимальный).
      * TODO: после установки papirus в чате темы заменить на "Papirus-Dark". */
     show-icons:             true;
-    icon-theme:             "hicolor";
+    icon-theme:             "Papirus-Dark";
 
     /* ── Формат отображаемой строки в drun ───────────────────
      * "{name}" — только имя приложения, без "(generic name)" в скобках,

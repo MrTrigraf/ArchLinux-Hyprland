@@ -1,0 +1,82 @@
+:root {
+  /* Фон окна — на тон темнее */
+  --window-bg-color: #252536;
+  --window-fg-color: #DCD7BA;
+
+  /* Центральная область (view) — на тон темнее */
+  --view-bg-color: #252536;
+  --view-fg-color: #DCD7BA;
+
+  /* Боковая панель — на тон темнее */
+  --sidebar-bg-color: #252536;
+  --sidebar-fg-color: #DCD7BA;
+
+  /* Headerbar — тёмный для контраста */
+  --headerbar-bg-color: #16161D;
+  --headerbar-fg-color: #DCD7BA;
+  --headerbar-backdrop-color: #1F1F28;
+  --headerbar-shade-color: rgba(220,215,186,0.12);
+
+  --sidebar-backdrop-color: #1F1F28;
+  --sidebar-shade-color: rgba(220,215,186,0.12);
+
+  --popover-bg-color: #2A2A37;
+  --popover-fg-color: #DCD7BA;
+  --popover-shade-color: rgba(220,215,186,0.12);
+
+  --card-bg-color: #252536;
+  --card-fg-color: #DCD7BA;
+  --card-shade-color: rgba(220,215,186,0.12);
+
+  --dialog-bg-color: #252536;
+  --dialog-fg-color: #DCD7BA;
+
+  --thumbnail-bg-color: #252536;
+  --thumbnail-fg-color: #DCD7BA;
+
+  --accent-bg-color: #b4a7b5;
+  --accent-fg-color: #1F1F28;
+  --accent-color: #b4a7b5;
+
+  --destructive-bg-color: #c84053;
+  --destructive-fg-color: #DCD7BA;
+  --destructive-color: #c84053;
+
+  --success-bg-color: #6f894e;
+  --success-fg-color: #DCD7BA;
+  --success-color: #6f894e;
+
+  --warning-bg-color: #de9800;
+  --warning-fg-color: #DCD7BA;
+  --warning-color: #de9800;
+
+  --error-bg-color: #c84053;
+  --error-fg-color: #DCD7BA;
+  --error-color: #c84053;
+
+  --shade-color: rgba(220,215,186,0.12);
+  --scrollbar-outline-color: rgba(220,215,186,0.12);
+  --border-color: rgba(220,215,186,0.18);
+}
+
+/* Этот фон НЕ трогаем — остаётся #2F2F3A как был */
+overlay > scrolledwindow {
+  background-color: #2F2F3A;
+  border-radius: 12px;
+  margin: 11px;
+  box-shadow: 0 2px 8px rgba(220, 215, 186, 0.2);
+}
+
+/* Убрать разделитель между сайдбаром и контентом в OverlaySplitView */
+overlay-split-view > widget,
+overlay-split-view > widget.sidebar,
+overlay-split-view > widget:first-child {
+  border: none;
+  box-shadow: none;
+}
+
+/* На случай, если граница висит на самом сайдбаре libadwaita */
+.navigation-sidebar {
+  border-right: none;
+  box-shadow: none;
+}

@@ -44,9 +44,9 @@ DIM_COLOR="#9e9b93"   # fg-muted из colors.rasi (серый путь). Pango �
 # ──────────────────────────────────────────────────────────────────────────
 # Глифы заданы прямыми UTF-8 байтами — раскрывается одинаково в любом bash.
 # (codepoints: folder U+F07B, file U+F016, arrow-up U+F062)
-ICON_FOLDER=$(printf '\xef\x81\xbb')   # nf-fa-folder  U+F07B
-ICON_FILE=$(printf '\xef\x80\x96')     # nf-fa-file_o  U+F016
-ICON_UP=$(printf '\xef\x81\xa2')       # nf-fa-arrow_up U+F062 (для "..")
+ICON_FOLDER="folder"
+ICON_FILE="text-x-generic"
+ICON_UP="go-up"
 
 # Короткий «хвост» пути:  ~/.config/hypr/…   /   ~/Projects/…
 short_tail() {
@@ -64,16 +64,16 @@ pango_escape() {
 
 # glyph, name(для фильтра), right(серый путь), info(в ROFI_INFO)
 emit_row() {
-    local glyph="$1" name="$2" right="$3" info="$4"
+    local icon="$1" name="$2" right="$3" info="$4"
     local ename eright disp
     ename="$(pango_escape "$name")"
     if [ -n "$right" ]; then
         eright="$(pango_escape "$right")"
-        disp="${glyph}  ${ename}\t<span foreground=\"${DIM_COLOR}\">${eright}</span>"
+        disp="${ename}\t<span foreground=\"${DIM_COLOR}\">${eright}</span>"
     else
-        disp="${glyph}  ${ename}"
+        disp="${ename}"
     fi
-    printf '%s\x00display\x1f%b\x1finfo\x1f%s\x1fmarkup\x1ftrue\n' "$name" "$disp" "$info"
+    printf '%s\x00display\x1f%b\x1ficon\x1f%s\x1finfo\x1f%s\x1fmarkup\x1ftrue\n' "$name" "$disp" "$icon" "$info"
 }
 
 # ── Диспетчер открытия файла ─────────────────────────────────────────────────
