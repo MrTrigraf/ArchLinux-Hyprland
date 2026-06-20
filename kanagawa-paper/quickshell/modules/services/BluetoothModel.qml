@@ -2,6 +2,7 @@ pragma Singleton
 import QtQuick
 import Quickshell
 import Quickshell.Bluetooth
+import Quickshell.Io
 import "../../theme"
 
 // ════════════════════════════════════════════════════════════════════
@@ -145,19 +146,99 @@ Singleton {
 	// Цвет берётся из Theme — лаванда-акцент (как в попапе для строки BT).
 	readonly property color iconColor: Theme.accent
 
-	// ── Диагностика (раскомментировать при отладке) ────────────────────
-	//Component.onCompleted: console.log("[BluetoothModel] available:", available, "adapter:", adapter ? adapter.adapterId : "none")
+	// ─────────────────────────────────────────────────────────────────────
+	// Уведомления о подключении / отключении BT-устройства.
+	//
+	// Логика:
+	//   - При старте Quickshell BT-устройства уже могут быть подключены.
+	//     Это не событие — текущее состояние. Init-таймер 3с подавляет
+	//     уведомления, потом фиксирует базовый список подключённых.
+	//   - На каждое изменение allDevices / activeDevice / hasActiveConnection
+	//     сравниваем множество адресов подключённых устройств с предыдущим.
+	//     Новые → "подключён", исчезнувшие → "отключён".
+	//   - Имена устройств кешируем по адресу: при отключении объект
+	//     устройства может уже быть недоступен или его name пуст.
+	//   - appName="BlueZ" совпадает с правилом в NotificationRules
+	//     → tier=system, urgency=normal.
+	// ─────────────────────────────────────────────────────────────────────
 
-	//onAllDevicesChanged: {
-	//	console.log("[BluetoothModel] devices.length:", allDevices.length)
-	//	for (var i = 0; i < allDevices.length; i++) {
-	//		var d = allDevices[i]
-	//		console.log("  device[" + i + "]",
-	//			"name=" + d.name,
-	//			"icon=" + d.icon,
-	//			"paired=" + d.paired,
-	//			"connected=" + d.connected,
-	//			"battery=" + (d.batteryAvailable ? d.battery : "n/a"))
-	//	}
-	//}
+	property bool btNotifInitDone:   false
+	property var  btLastConnAddrs:   []      // массив address строк
+	property var  btNameCache:       ({})    // map: address → name
+
+	Timer {
+		id: btNotifInitTimer
+		interval: 3000
+		repeat: false
+		running: true
+		onTriggered: {
+			root.updateBtNameCache()
+			root.btLastConnAddrs = root.allDevices
+				.filter(function(d) { return d.connected })
+				.map(function(d) { return d.address || "" })
+			root.btNotifInitDone = true
+		}
+	}
+
+	// Обновляем кеш имён по всем известным устройствам.
+	function updateBtNameCache() {
+		var cache = Object.assign({}, btNameCache)
+		for (var i = 0; i < allDevices.length; i++) {
+			var d = allDevices[i]
+			var addr = d.address || ""
+			var name = d.name || d.deviceName || ""
+			if (addr && name) cache[addr] = name
+		}
+		btNameCache = cache
+	}
+
+	function checkBtConnectionChange() {
+		if (!btNotifInitDone) return
+
+		updateBtNameCache()
+
+		var current = allDevices
+			.filter(function(d) { return d.connected })
+			.map(function(d) { return d.address || "" })
+
+		// Новые подключения.
+		for (var i = 0; i < current.length; i++) {
+			var addr = current[i]
+			if (btLastConnAddrs.indexOf(addr) < 0) {
+				var name = btNameCache[addr] || "устройство"
+				sendBtNotification("bluetooth", "Bluetooth подключён: " + name)
+			}
+		}
+
+		// Отключения.
+		for (var j = 0; j < btLastConnAddrs.length; j++) {
+			var addr2 = btLastConnAddrs[j]
+			if (current.indexOf(addr2) < 0) {
+				var name2 = btNameCache[addr2] || "устройство"
+				sendBtNotification("bluetooth-disabled", "Bluetooth отключён: " + name2)
+			}
+		}
+
+		btLastConnAddrs = current
+	}
+
+	// Триггеры. Хотя бы один из них срабатывает при любом изменении
+	// состояния connect/disconnect (включая множественные подключения).
+	onAllDevicesChanged:         checkBtConnectionChange()
+	onActiveDeviceChanged:       checkBtConnectionChange()
+	onHasActiveConnectionChanged: checkBtConnectionChange()
+
+	function sendBtNotification(icon, summary) {
+		notifyProc.command = [
+			"notify-send",
+			"-a", "BlueZ",
+			"-u", "normal",
+			"-i", icon,
+			"-h", "string:category:device",
+			summary
+		]
+		notifyProc.startDetached()
+	}
+
+	Process { id: notifyProc; command: [] }
 }

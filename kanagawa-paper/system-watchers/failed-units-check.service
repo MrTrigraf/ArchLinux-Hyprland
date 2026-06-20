@@ -1,0 +1,7 @@
+[Unit]
+Description=Check for failed systemd units (system + user scope)
+Documentation=https://github.com/<your-repo>
+
+[Service]
+Type=oneshot
+ExecStart=%h/.config/hypr/kanagawa-paper/system-watchers/failed-units-check.fish

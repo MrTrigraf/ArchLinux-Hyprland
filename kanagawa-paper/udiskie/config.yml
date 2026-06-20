@@ -1,0 +1,19 @@
+# Конфиг udiskie. Подключается через флаг -c в hyprland.lua.
+# Из всех уведомлений оставлены только mount/unmount/lock/unlock и
+# ошибки заданий. device_added/device_removed отключены, потому что
+# при автомонтировании они дублируют mount/unmount.
+notifications:
+  device_added: false
+  device_removed: false
+  device_mounted: true
+  device_unmounted: false
+  device_locked: true
+  device_unlocked: true
+  job_failed: true
+
+icon_names:
+  mount:    [media-removable, drive-removable-media]
+  unmount:  [media-eject]
+  unlock:   [changes-allow, security-high]
+  lock:     [changes-prevent, security-low]
+  eject:    [media-eject]

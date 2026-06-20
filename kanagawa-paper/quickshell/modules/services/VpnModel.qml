@@ -101,15 +101,78 @@ Singleton {
 		Quickshell.execDetached(["hyprctl", "dispatch", "hl.dsp.exec_cmd(\"" + inner + "\")"])
 	}
 
-	// ── Диагностический блок ───────────────────────────────────────────
-//	onProfilesChanged: {
-//		console.log("[VpnModel] profiles.length:", profiles.length,
-//			"active:", activeProfiles.length)
-//		for (var i = 0; i < profiles.length; i++) {
-//			var p = profiles[i]
-//			console.log("  profile[" + i + "] name='" + p.name + "'",
-//				"type=" + p.type, "active=" + p.active,
-//				"device='" + p.device + "'")
-//		}
-//	}
+	// ─────────────────────────────────────────────────────────────────────
+	// Уведомления о подключении / отключении VPN.
+	//
+	// Логика:
+	//   - При старте Quickshell activeProfiles может быть непустым (VPN
+	//     уже поднят). Это НЕ событие — текущее состояние, уведомления
+	//     слать не надо. Init-таймер 3с подавляет уведомления, потом
+	//     фиксирует текущий список активных как базовый.
+	//   - На каждое изменение activeProfiles сравниваем текущее множество
+	//     uuid с предыдущим (lastActive):
+	//       - есть в current, не было в lastActive → "VPN подключён"
+	//       - было в lastActive, нет в current   → "VPN отключён"
+	//   - В lastActive храним {uuid, name}, потому что при отключении
+	//     объекта в activeProfiles уже нет — имя нужно достать из памяти.
+	//   - appName="NetworkManager" → tier=system через NotificationRules.
+	// ─────────────────────────────────────────────────────────────────────
+
+	property bool vpnNotifInitDone: false
+	property var  lastActive:        []   // [{uuid, name}, ...]
+
+	Timer {
+		id: vpnNotifInitTimer
+		interval: 3000
+		repeat: false
+		running: true
+		onTriggered: {
+			root.lastActive = root.activeProfiles.map(function(p) {
+				return { uuid: p.uuid, name: p.name }
+			})
+			root.vpnNotifInitDone = true
+		}
+	}
+
+	onActiveProfilesChanged: {
+		if (!vpnNotifInitDone) return
+
+		var current = activeProfiles.map(function(p) {
+			return { uuid: p.uuid, name: p.name }
+		})
+
+		// Новые подключения: есть в current, не было в lastActive.
+		for (var i = 0; i < current.length; i++) {
+			var c = current[i]
+			var wasActive = lastActive.some(function(l) { return l.uuid === c.uuid })
+			if (!wasActive) {
+				sendVpnNotification("network-vpn", "VPN подключён: " + c.name)
+			}
+		}
+
+		// Отключения: было в lastActive, нет в current.
+		for (var j = 0; j < lastActive.length; j++) {
+			var l2 = lastActive[j]
+			var stillActive = current.some(function(c2) { return c2.uuid === l2.uuid })
+			if (!stillActive) {
+				sendVpnNotification("network-vpn-disconnected", "VPN отключён: " + l2.name)
+			}
+		}
+
+		lastActive = current
+	}
+
+	function sendVpnNotification(icon, summary) {
+		notifyProc.command = [
+			"notify-send",
+			"-a", "NetworkManager",
+			"-u", "normal",
+			"-i", icon,
+			"-h", "string:category:network",
+			summary
+		]
+		notifyProc.startDetached()
+	}
+
+	Process { id: notifyProc; command: [] }
 }

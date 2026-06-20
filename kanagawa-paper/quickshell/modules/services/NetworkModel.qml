@@ -2,6 +2,7 @@ pragma Singleton
 import QtQuick
 import Quickshell
 import Quickshell.Networking
+import Quickshell.Io
 import "../../theme"
 
 Singleton {
@@ -109,21 +110,90 @@ Singleton {
 		if (net) net.forget()
 	}
 
-	// ── Диагностический блок (срабатывает реактивно при изменении devices) ──
-	// Quickshell.Networking.devices наполняется асинхронно через DBus, поэтому
-	// Component.onCompleted увидит пустой список. onAllDevicesChanged тригернётся,
-	// когда NetworkManager пришлёт первый ответ — и на каждом последующем
-	// изменении (подключение/отключение устройств).
-	//Component.onCompleted: console.log("[NetworkModel] backend:", Networking.backend)
+	// ─────────────────────────────────────────────────────────────────────
+	// Уведомления о смене состояния Wi-Fi / Ethernet.
+	//
+	// Логика:
+	//   - При старте Quickshell wifiConnected / wiredConnected могут уже быть
+	//     true (Wi-Fi подключён в момент старта). Это НЕ событие — это
+	//     текущее состояние, уведомления слать не надо.
+	//   - Поэтому первые 3 секунды после старта уведомления подавлены
+	//     (notifInitDone=false). По истечении init-таймера фиксируем
+	//     "базовое" состояние и начинаем реагировать только на ИЗМЕНЕНИЯ.
+	//   - При отключении Wi-Fi activeSsid уже становится "" (биндинг
+	//     обновляется реактивно). Чтобы показать "Wi-Fi отключён: <SSID>",
+	//     запоминаем имя последней активной сети в lastActiveSsid.
+	//   - appName="NetworkManager" совпадает с правилом в NotificationRules
+	//     → tier=system, urgency=normal.
+	// ─────────────────────────────────────────────────────────────────────
 
-	//onAllDevicesChanged: {
-		//console.log("[NetworkModel] devices.length:", allDevices.length)
-		//for (var i = 0; i < allDevices.length; i++) {
-			//var d = allDevices[i]
-			//console.log("  device[" + i + "] type=" + d.type,
-				//"name=" + d.name,
-                //"connected=" + d.connected,
-                //"state=" + d.state)
-		//}
-	//}
+	property bool   notifInitDone:     false
+	property bool   wasWifiConnected:  false
+	property bool   wasWiredConnected: false
+	property string lastActiveSsid:    ""
+
+	// Init-таймер: подавляет уведомления первые 3 секунды после старта,
+	// затем фиксирует текущее состояние как базовое.
+	Timer {
+		id: notifInitTimer
+		interval: 3000
+		repeat: false
+		running: true
+		onTriggered: {
+			root.wasWifiConnected  = root.wifiConnected
+			root.wasWiredConnected = root.wiredConnected
+			if (root.wifiConnected) root.lastActiveSsid = root.activeSsid
+			root.notifInitDone = true
+		}
+	}
+
+	// Реакция на смену Wi-Fi состояния.
+	onWifiConnectedChanged: {
+		if (!notifInitDone) return
+		if (wifiConnected && !wasWifiConnected) {
+			// SSID может ещё не успеть подтянуться — берём из activeSsid
+			// или из lastActiveSsid как fallback.
+			var ssid = activeSsid || lastActiveSsid || ""
+			sendNetworkNotification("network-wireless",
+				ssid.length > 0 ? "Wi-Fi подключён: " + ssid : "Wi-Fi подключён")
+		} else if (!wifiConnected && wasWifiConnected) {
+			var ssid2 = lastActiveSsid || ""
+			sendNetworkNotification("network-wireless-disconnected",
+				ssid2.length > 0 ? "Wi-Fi отключён: " + ssid2 : "Wi-Fi отключён")
+		}
+		wasWifiConnected = wifiConnected
+	}
+
+	// При подключении к Wi-Fi запоминаем SSID, чтобы показать его при отключении.
+	onActiveSsidChanged: {
+		if (notifInitDone && activeSsid.length > 0) lastActiveSsid = activeSsid
+	}
+
+	// Реакция на смену Ethernet состояния.
+	onWiredConnectedChanged: {
+		if (!notifInitDone) return
+		if (wiredConnected && !wasWiredConnected) {
+			sendNetworkNotification("network-wired", "Ethernet подключён")
+		} else if (!wiredConnected && wasWiredConnected) {
+			sendNetworkNotification("network-wired-disconnected", "Ethernet отключён")
+		}
+		wasWiredConnected = wiredConnected
+	}
+
+	// Отправка уведомления через notify-send. Все Network-уведомления
+	// идут как System (через appName="NetworkManager").
+	function sendNetworkNotification(icon, summary) {
+		notifyProc.command = [
+			"notify-send",
+			"-a", "NetworkManager",
+			"-u", "normal",
+			"-i", icon,
+			"-h", "string:category:network",
+			summary
+		]
+		notifyProc.startDetached()
+	}
+
+	// Process для notify-send. Команда подменяется перед каждым вызовом.
+	Process { id: notifyProc; command: [] }
 }

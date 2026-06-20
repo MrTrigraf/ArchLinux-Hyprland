@@ -2,6 +2,7 @@ pragma Singleton
 import QtQuick
 import Quickshell
 import Quickshell.Services.UPower
+import Quickshell.Io
 import "../../theme"
 
 Singleton {
@@ -83,4 +84,55 @@ Singleton {
         if (hours === 0) return mins + "м"
         return hours + "ч " + mins + "м"
     }
+
+    // ───Уведомления о низком заряде ────────────────────────────────────────
+    // Последний порог, по которому уже отправили уведомление.
+    // 100 = ни одного, всё впереди. После 5% станет 5.
+    property int lastNotifiedThreshold: 100
+
+    // Декларативный список порогов: от высокого к низкому.
+    // Все три — обычные системные уведомления (urgency=normal → tier=system).
+    readonly property var batteryThresholds: [
+        { pct: 30, icon: "battery-low",     summary: "Заряд батареи 30%" },
+        { pct: 15, icon: "battery-caution", summary: "Заряд батареи 15%" },
+        { pct:  5, icon: "battery-empty",   summary: "Заряд батареи 5%"  }
+    ]
+
+    // Реакция на изменение процента: ищем самый низкий из не-отправленных порогов.
+    onPercentageChanged: {
+        if (!ready || pluggedIn) return
+        var triggered = null
+        for (var i = 0; i < batteryThresholds.length; ++i) {
+            var t = batteryThresholds[i]
+            if (percentage <= t.pct && lastNotifiedThreshold > t.pct) {
+                triggered = t   // перезаписываем — нужен самый низкий
+            }
+        }
+        if (triggered) {
+            sendLowBatteryNotification(triggered)
+            lastNotifiedThreshold = triggered.pct
+        }
+    }
+
+    // Подключили зарядку — сбрасываем счётчик. Следующая разрядка
+    // снова покажет все три уведомления при пересечении порогов.
+    onPluggedInChanged: {
+        if (pluggedIn) lastNotifiedThreshold = 100
+    }
+
+    // Отправка уведомления через notify-send (внешний процесс).
+    function sendLowBatteryNotification(t) {
+        notifyProc.command = [
+            "notify-send",
+            "-a", "Battery",
+            "-u", "normal",
+            "-i", t.icon,
+            "-h", "string:category:device.battery",
+            t.summary
+        ]
+        notifyProc.startDetached()
+    }
+
+    // Process для запуска notify-send. Команда подменяется перед каждым вызовом.
+    Process { id: notifyProc; command: [] }
 }
