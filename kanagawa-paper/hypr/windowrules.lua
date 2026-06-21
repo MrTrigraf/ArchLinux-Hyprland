@@ -82,3 +82,11 @@ hl.window_rule({
   size   = {"(monitor_w*0.4)", "(monitor_h*0.3)"},
   center = true,
 })
+
+hl.window_rule({
+  name   = "cmus-floating",
+  match  = { class = "^(cmus-floating)$" },
+  float  = true,
+  size   = {"(monitor_w*0.6)", "(monitor_h*0.65)"},
+  center = true,
+})
