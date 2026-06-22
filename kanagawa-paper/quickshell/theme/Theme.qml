@@ -451,4 +451,12 @@ QtObject {
 	// ─── Notifications: бейдж непрочитанного на колокольчике ─────────────
 	readonly property color notifBadgeBg:             accent
 	readonly property color notifBadgeFg:             popupItemHoverFg
+
+	// ─── Media: бегущая строка названия трека (MediaSection) ─────────────
+	readonly property int  mediaTitleFontSize:       12   // размер шрифта названия трека
+	readonly property int  mediaTitleMaxWidth:       150  // ширина окна marquee; > — текст бежит
+	readonly property int  mediaButtonGap:           1    // зазор между skip_prev / play / skip_next
+	readonly property int  mediaTitleLeftPadding:    6   // отступ от skip_next до начала названия
+	readonly property int  mediaMarqueeGap:          40   // пробел между концом и началом для seamless loop
+	readonly property int  mediaMarqueeSpeedMsPerPx: 30   // скорость marquee, ms на 1 пиксель сдвига
 }

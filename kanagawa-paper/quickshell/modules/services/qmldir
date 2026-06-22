@@ -8,3 +8,4 @@ singleton NotificationRules 1.0 NotificationRules.qml
 singleton NotificationService 1.0 NotificationService.qml
 singleton AudioOutputModel 1.0 AudioOutputModel.qml
 singleton AudioInputModel 1.0 AudioInputModel.qml
+singleton MprisModel 1.0 MprisModel.qml

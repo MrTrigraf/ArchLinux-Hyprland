@@ -13,7 +13,10 @@ import "./theme"
 Variants {
 	model: Quickshell.screens
 
-	Component.onCompleted: NotificationService.server
+	Component.onCompleted: {
+		NotificationService.server
+		MprisModel.cmusPlayer
+	}
 
     delegate: QtObject {
         id: perScreen

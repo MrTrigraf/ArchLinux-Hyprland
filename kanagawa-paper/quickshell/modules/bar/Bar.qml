@@ -101,6 +101,15 @@ PanelWindow {
             onTerminalClicked:  (x) => bar.leftTerminalClicked(x)
             onFilesClicked:     (x) => bar.leftFilesClicked(x)
             onWallpaperClicked: (x) => bar.leftWallpaperClicked(x)
+		}
+
+		// ─── Media-секция: между Left и Center ───────────────────────────
+        MediaSection {
+            id: mediaSection
+            anchors.left: leftSection.right
+            anchors.leftMargin: Theme.sectionGap
+            anchors.bottom: parent.bottom
+            anchors.bottomMargin: Theme.sectionBottomMargin
         }
 
         // ─── Центральная секция: строго по центру бара ───────────────────
