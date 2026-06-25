@@ -69,3 +69,22 @@ hl.config({
         fullscreen_on_one_column = true,
     },
 })
+
+--------------------------------
+---- FOCUS-ON-OPEN HANDLERS ----
+--------------------------------
+local focusOnOpen = {
+  -- "viewnior",
+  -- "showtime",        -- если понадобится
+  -- "file-roller",     -- если понадобится
+  -- "impression",      -- если понадобится
+}
+
+hl.on("window.open", function(w)
+  for _, cls in ipairs(focusOnOpen) do
+    if w.class == cls then
+      hl.dispatch(hl.dsp.focus({ window = w }))
+      return
+    end
+  end
+end)

@@ -83,20 +83,43 @@ open_file() {
     [ "$ext" = "${FILE##*/}" ] && ext=""
     ext="${ext,,}"
     case "$ext" in
-        go|mod|sum|tmpl|gohtml) kitty --detach -e nvim "$FILE" ;;
+        # Текстовые / код
+        go|mod|sum|tmpl|gohtml|sh|bash|zsh|fish|html|htm|css|scss|sass|less|xml|svg|\
+        md|markdown|rst|txt|org|adoc|json|jsonc|json5|yaml|yml|toml|ini|conf|config|env|\
+        properties|desktop|service|timer|target|mount|nix|qml|qss|rasi|lock|\
+        mk|cmake|ninja|dockerfile|containerfile|csv|tsv|log|\
         lua|luau|py|rs|js|jsx|ts|tsx|mjs|cjs|vue|svelte|astro|\
-        c|h|cpp|cc|cxx|hpp|rb|php|java|kt|swift|zig|nim|ml) kitty --detach -e nvim "$FILE" ;;
-        sh|bash|zsh|fish) kitty --detach -e nvim "$FILE" ;;
-        html|htm|css|scss|sass|less|xml|svg) kitty --detach -e nvim "$FILE" ;;
-        md|markdown|rst|txt|org|adoc) kitty --detach -e nvim "$FILE" ;;
-        json|jsonc|json5|yaml|yml|toml|ini|conf|config|env|properties|\
-        desktop|service|timer|target|mount|nix|qml|qss|rasi|lock) kitty --detach -e nvim "$FILE" ;;
-        mk|cmake|ninja|dockerfile|containerfile) kitty --detach -e nvim "$FILE" ;;
-        csv|tsv|log) kitty --detach -e nvim "$FILE" ;;
-        pdf) evince "$FILE" </dev/null >/dev/null 2>&1 & disown ;;
-        png|jpg|jpeg|webp|gif|bmp|ico|tiff|avif) viewnior "$FILE" </dev/null >/dev/null 2>&1 & disown ;;
-        "") kitty --detach -e nvim "$FILE" ;;
-        *) xdg-open "$FILE" </dev/null >/dev/null 2>&1 & disown ;;
+        c|h|cpp|cc|cxx|hpp|rb|php|java|kt|swift|zig|nim|ml)
+            kitty --detach -e nvim "$FILE"
+            ;;
+        pdf)
+            evince "$FILE" </dev/null >/dev/null 2>&1 & disown
+            ;;
+        # Изображения
+        png|jpg|jpeg|webp|gif|bmp|ico|tiff|avif)
+            viewnior "$FILE" </dev/null >/dev/null 2>&1 & disown
+            ;;
+        # Аудио
+        mp3|flac|ogg|wav|aac|m4a|opus|wma|alac|ape|wv|dsf|dff)
+            if ! cmus-remote -q "$FILE" 2>/dev/null; then
+                kitty --detach --class cmus-floating -e cmus
+                sleep 0.3
+                cmus-remote -q "$FILE" && cmus-remote -p
+            else
+                cmus-remote -q "$FILE" && cmus-remote -p
+            fi
+            ;;
+        # Видео
+        mp4|avi|mkv|mov|wmv|flv|webm|m4v|3gp|mpg|mpeg|ts|vob|ogv|ogm|rmvb|qt)
+            showtime "$FILE" </dev/null >/dev/null 2>&1 & disown
+            ;;
+        # Пустые / остальные
+        "")
+            kitty --detach -e nvim "$FILE"
+            ;;
+        *)
+            xdg-open "$FILE" </dev/null >/dev/null 2>&1 & disown
+            ;;
     esac
 }
 

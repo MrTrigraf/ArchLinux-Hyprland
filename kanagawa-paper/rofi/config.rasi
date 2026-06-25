@@ -7,35 +7,41 @@
  */
 
 configuration {
-    /* ── Активные modi (порядок = порядок кнопок в зоне 3) ───
+    /* ── Активные modi (порядок = порядок кнопок mode-switcher) ───
      * drun    — запуск .desktop-приложений
      * files   — наш скрипт file-opener.sh
-     * window  — переключатель открытых окон по title/class
-     */
-    modes:                  "drun,files:~/.config/hypr/kanagawa-paper/rofi/scripts/file-opener.sh,window";
+     * ssh     — встроенный rofi-modi, читает ~/.ssh/config
+     *           и ~/.ssh/known_hosts. Выбор хоста → запуск ssh
+     *           в `terminal` (см. ниже). */
+    modes:                  "drun,files:~/.config/hypr/kanagawa-paper/rofi/scripts/file-opener.sh,ssh";
 
-    /* ── Иконки на кнопках mode-switcher (зона 3) ────────────
-     * Глифы — Nerd Font UTF-8 codepoints, скопированы из
-     * adi1090x/rofi/files/launchers/type-1/style-5.rasi
-     * (там они работают на JetBrainsMono Nerd Font — у нас тот же шрифт). */
-    display-drun:           "<span></span>";
-    display-files:          "<span>󰉋</span>";
-    display-window:         "<span></span>";
+    /* ── Подписи на кнопках mode-switcher ─────────────────────
+     * Plain text без глифов и без <span>: rofi 2.0.0 ломает
+     * icon-fetcher на mode-switcher buttons (урок чата 16 в HANDOFF —
+     * целый чат потрачен, решения не нашли). markup на button
+     * в theme.rasi не задаём. */
+    display-drun:           "Apps";
+    display-files:          "Files";
+    display-ssh:            "SSH";
 
     /* ── Иконки приложений в drun-листе ──────────────────────
-     * Сейчас icon-theme = hicolor (минимальный).
-     * TODO: после установки papirus в чате темы заменить на "Papirus-Dark". */
+     * Это для строк ВНУТРИ списка drun, не для кнопок mode-switcher
+     * (где иконки сломаны, см. выше). Темa Papirus-Dark установлена
+     * в чате 16 темизации. */
     show-icons:             true;
     icon-theme:             "Papirus-Dark";
 
     /* ── Формат отображаемой строки в drun ───────────────────
-     * "{name}" — только имя приложения, без "(generic name)" в скобках,
-     * как у adi1090x в style-5. */
+     * "{name}" — только имя приложения, без "(generic name)" в скобках. */
     drun-display-format:    "{name}";
 
-    /* ── Формат строки в window ──────────────────────────────
-     * {w} = workspace, {c} = class, {t} = title. */
-    window-format:          "{t}: {c}";
+    /* ── Терминал для ssh modi ───────────────────────────────
+     * При выборе хоста в ssh modi rofi выполняет ssh-command,
+     * по умолчанию `{terminal} -e ssh {host}`. Без явного `terminal`
+     * вызывается `rofi-sensible-terminal`, который перебирает зоопарк
+     * эмуляторов и доходит до kitty где-то в конце списка. Явная
+     * установка — мгновенный запуск без перебора. */
+    terminal:               "kitty";
 
     /* ── Поиск ─────────────────────────────────────────────── */
     case-sensitive:         false;

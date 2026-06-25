@@ -2,14 +2,27 @@
  * theme.rasi — структура виджетов и геометрия rofi
  * ────────────────────────────────────────────────
  * Палитра — colors.rasi (@import ниже).
- * Размеры:
- *  - окно (width):           % от монитора
- *  - всё внутри окна:        em (масштабируется с font-size)
- *  - количество строк listview: фиксированное число
  *
- * file-opener: правая колонка (серый путь) выравнивается через
- * element-text { tab-stops: [ ... ]; }. Табстоп задан в % ширины окна,
- * поэтому позиция одинакова на любом мониторе (мульти-монитор-safe).
+ * Layout (сверху вниз):
+ *   ┌── window (40% монитора, скруглённое окно) ──┐
+ *   │  inputbar       pill: prompt + entry        │
+ *   │  listview       результаты (8 строк)        │
+ *   │  mode-switcher  сегментированный контрол    │
+ *   │                 modi: drun / files / ssh    │
+ *   └─────────────────────────────────────────────┘
+ *
+ * Принципы:
+ *  - окно (width):           % от монитора (мульти-монитор-safe)
+ *  - всё внутри окна:        em (масштабируется с font-size)
+ *  - количество строк:       фиксированное число
+ *  - tab-stops file-opener:  % от ширины монитора
+ *
+ * Формула tab-stops — см. блок element-text.
+ *
+ * Контуры:
+ *  - window:                 @edge        (граница окно/обои, alpha 0.30)
+ *  - inputbar, mode-switcher: @edge-strong (капсулы внутри окна, alpha 0.50)
+ *    Подробнее о выборе alpha — см. colors.rasi.
  */
 
 @import "colors.rasi"
@@ -20,7 +33,8 @@
     background-color:   transparent;
     text-color:         @fg;
 
-    radius-pill:        0.5em;
+    radius-pill:        0.5em;     /* внешний pill: inputbar, mode-switcher, element */
+    radius-inner:       0.35em;    /* внутренний radius: thumb активной modi-кнопки */
 }
 
 /* ── Корневое окно ────────────────────────────────────────── */
@@ -41,20 +55,25 @@ window {
 }
 
 /* ── Внутренний контейнер ─────────────────────────────────── */
+/* Порядок children сверху вниз: поле поиска → список → modi. */
 mainbox {
     spacing:            0.5em;
     padding:            0;
     background-color:   transparent;
-    children:           [ inputbar, listview ];
+    children:           [ inputbar, listview, mode-switcher ];
 }
 
-/* ── Зона 1 + 3: поле поиска и mode-switcher в одной строке ─ */
+/* ── Зона 1: поле поиска ──────────────────────────────────── */
+/* mode-switcher вынесен из inputbar в самый низ окна (см. ниже).
+ * Здесь остался только prompt + entry. */
 inputbar {
     padding:            0.5em 0.85em;
     spacing:            0.6em;
     background-color:   @bg-input;
+    border:             1px solid;
+    border-color:       @edge-strong;
     border-radius:      @radius-pill;
-    children:           [ textbox-prompt-colon, entry, mode-switcher ];
+    children:           [ textbox-prompt-colon, entry ];
 }
 
 textbox-prompt-colon {
@@ -75,7 +94,7 @@ entry {
     cursor:             text;
 }
 
-/* ── Зона 2: список ───────────────────────────────────────── */
+/* ── Зона 2: список результатов ───────────────────────────── */
 listview {
     lines:              8;
     columns:            1;
@@ -96,10 +115,10 @@ scrollbar {
     border-radius:      0.1em;
 }
 
-/* ── Элемент списка ──────────────────────────────────── */
+/* ── Элемент списка ───────────────────────────────────────── */
 element {
     padding:            0.45em 0.9em;
-    spacing:            0.9em;            /* отступ между иконкой и текстом */
+    spacing:            0.9em;             /* отступ между иконкой и текстом */
     border-radius:      @radius-pill;
     background-color:   transparent;
     text-color:         @fg;
@@ -127,7 +146,7 @@ element-icon {
  * Формула:  tab% (монитор) = желаемая_доля_внутри_окна × ширина_окна_в_%
  * Если поменяешь width окна — пересчитай это число по формуле выше.
  *
- * Почему % монитора, а не окна: так позиция масштабируется
+ * Почему % монитора, а не окна: позиция масштабируется
  * пропорционально на ЛЮБОМ мониторе (мульти-монитор-safe).
  *
  * markup НЕ задаём здесь — включён per-row из скрипта (markup-rows).
@@ -140,20 +159,46 @@ element-text {
     tab-stops:          [ 22% ];
 }
 
-/* ── Зона 3: mode-switcher ────────────────────────────────── */
+/* ── Зона 3: mode-switcher (сегментированный контрол) ─────────
+ * Раньше modi-кнопки сидели справа в inputbar и выглядели как три
+ * отдельные таблетки. Теперь — отдельный блок внизу окна:
+ *
+ *   ┌────────────────────────────────────────┐  ← @bg-input pill
+ *   │   Apps      Files     [ SSH ]          │
+ *   └────────────────────────────────────────┘
+ *
+ * Принцип:
+ *   - внешняя капсула: @bg-input + @radius-pill (тот же фон, что у
+ *     inputbar, — визуальная рифма верх↔низ).
+ *   - кнопки делят ширину поровну (expand:true), без зазоров между
+ *     ними (spacing:0). Каждая кнопка прозрачная — фон капсулы
+ *     просвечивает.
+ *   - активный режим: thumb @accent с уменьшенным радиусом
+ *     (@radius-inner < @radius-pill) — «таблетка» внутри капсулы,
+ *     не упирается в её края.
+ *
+ * Кнопки текстовые без глифов: rofi 2.0.0 ломает icon-fetcher на
+ * mode-switcher buttons (урок чата 16 в HANDOFF — целый чат потрачен,
+ * решения не нашли). markup на button не нужен — display-строки
+ * теперь plain text без <span>.
+ */
 mode-switcher {
-    spacing:            0.3em;
-    background-color:   transparent;
+    spacing:            0;
+    padding:            0.2em;
+    background-color:   @bg-input;
+    border:             1px solid;
+    border-color:       @edge-strong;
+    border-radius:      @radius-pill;
 }
 
 button {
-    markup:             true;
-    padding:            0.3em 0.7em;
-    border-radius:      0.6em;
-    background-color:   @bg-modi-idle;
-    text-color:         @fg;
+    expand:             true;
+    padding:            0.4em 0.9em;
     horizontal-align:   0.5;
     vertical-align:     0.5;
+    border-radius:      @radius-inner;
+    background-color:   transparent;
+    text-color:         @fg;
     cursor:             pointer;
 }
 
