@@ -2,6 +2,8 @@
 
 > Готовая к работе система на Arch Linux с оконным менеджером Hyprland, темой `kanagawa-paper` и полным набором настроенных приложений.
 
+![Russian](https://img.shields.io/badge/lang-Russian-1793d1) [![English](https://img.shields.io/badge/lang-English-lightgrey)](README.en.md)
+
 ![status](https://img.shields.io/badge/status-active-brightgreen) ![Hyprland](https://img.shields.io/badge/Hyprland-0.55.4-blue) ![Arch](https://img.shields.io/badge/Arch-Rolling-1793d1)
 
 <!-- SYSTEM PARAMETERS -->
@@ -13,7 +15,7 @@
 
 - **OS:** [**`Arch Linux`**](https://archlinux.org/)
 - **WM:** [**`Hyprland`**](https://hyprland.org/) (Wayland, 0.55+ на Lua)
-- **Bar / Popups / Notifications:** [**`Quickshell`**](https://quickshell.org/) (QML, Qt 6)
+- **Bar / Popups / Notifications:** [**`Quickshell`**](https://quickshell.org/)
 - **Terminal:** [**`kitty`**](https://sw.kovidgoyal.net/kitty/)
 - **App Launcher:** [**`rofi`**](https://github.com/davatorium/rofi)
 - **Lock / Idle:** [**`hyprlock`**](https://github.com/hyprwm/hyprlock) + [**`hypridle`**](https://github.com/hyprwm/hypridle)
@@ -33,8 +35,6 @@
 <!-- GALLERY -->
 <a name="Gallery"></a>
 <h2 align="center">🖼️ Gallery</h2>
-
-> Скриншоты будут добавлены позднее. Плейсхолдеры — в `docs/screenshots/`.
 
 <table>
 <tr>

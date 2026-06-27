@@ -312,8 +312,9 @@ WrapperRectangle {
 
 		// ─── 5. Battery icon (правее часов, только ноут) ──────────────────
         // --- desktop: comment out the battery block (no battery) ---
-        Item {
-            id: batterySlot
+		Item {
+			id: batterySlot
+            visible: BatteryModel.hasBattery
             implicitWidth:  Theme.batteryIconSize
             implicitHeight: Theme.batteryIconSize
 

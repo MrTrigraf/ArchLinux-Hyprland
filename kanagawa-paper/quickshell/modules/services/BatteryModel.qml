@@ -11,6 +11,7 @@ Singleton {
     // ── Источник данных ────────────────────────────────────────────────
     readonly property var device: UPower.displayDevice
     readonly property bool ready: device.ready && device.isLaptopBattery
+	readonly property bool hasBattery: device.isLaptopBattery
 
     // ── Сырые значения от UPower ───────────────────────────────────────
     readonly property real percentage: ready ? device.percentage * 100 : 0
