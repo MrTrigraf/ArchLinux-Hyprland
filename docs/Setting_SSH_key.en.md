@@ -22,9 +22,16 @@
 
 ## 📌 Prerequisites
 
-- `git` installed — included in the base pacstrap set (see [Arch Linux Installation → Step 4](Arch_linux_install.en.md#4-base-system-installation))
+- `git` and `openssh` installed:
+
+  ```bash
+  sudo pacman -S git openssh
+  ```
+
 - Have a GitHub account
 - Active network connection
+
+> 💡 `git` and `openssh` are not included in the base pacstrap set of the [Arch Linux Installation](Arch_linux_install.en.md) guide — the system installs minimally. These packages are installed only if you work with git repositories.
 
 ---
 

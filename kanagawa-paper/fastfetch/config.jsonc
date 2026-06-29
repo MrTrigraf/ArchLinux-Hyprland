@@ -1,6 +1,6 @@
 {
     "$schema": "https://github.com/fastfetch-cli/fastfetch/raw/dev/doc/json_schema.json",
-    
+
     "logo": {
 	    //"source": "~/.config/hypr/kanagawa/fastfetch/nyarch.png",
 	    "type": "kitty",
@@ -19,7 +19,7 @@
             "type": "custom",
             "format": "┌──────────────────────────────────────────────────────┐",
         },
-        
+
         {
             "type": "custom",
             "format": "  PC info"
@@ -32,13 +32,19 @@
         },
         {
             "type": "gpu",
-            "format": "{1} {2} @ {12} GHz",            
+            "format": "{1} {2} @ {12} GHz",
             "key": " ├ 󰢮 ",
             "keyColor": "33"
         },
         {
             "type": "disk",
             "key": " ├ 󰋊 ",
+            "keyColor": "33"
+        },
+        {
+            "type": "command",
+            "key": " ├  ",
+            "text": "awk 'NR > 1 { used += $4; total += $3 } END { if (total > 0) printf \"%.2f GiB / %.2f GiB (%.0f%%)\", used/1024/1024, total/1024/1024, (used/total)*100 }' /proc/swaps",
             "keyColor": "33"
         },
         {
@@ -81,7 +87,7 @@
         {
             "type": "shell",
             "key": " ├  ",
-            "keyColor": "33" 
+            "keyColor": "33"
         },
         {
             "type": "command",
@@ -92,13 +98,13 @@
         {
             "type": "uptime",
             "key": " └ 󰅐 ",
-            "keyColor": "33" 
+            "keyColor": "33"
         },
         {
             "type": "custom",
             "format": "└──── {##2A2A37}󰫍 {##c4746e}󰫍 {##699469}󰫍 {##c4b28a}󰫍 {##698a9b}󰫍 {##938AA9}󰫍 {##8ea49e}󰫍 {##C8C093}󰫍{#} ─────────────────────────────────┘"
-        }  
+        }
     ]
 
-    
+
 }

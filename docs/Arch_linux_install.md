@@ -15,10 +15,66 @@
 - [5. Настройка внутри chroot](#5-настройка-внутри-chroot)
 - [6. Загрузчик systemd-boot](#6-загрузчик-systemd-boot)
 - [7. Создание пользователя](#7-создание-пользователя)
+- [8. Подключение к Wi-Fi после установки](#8-подключение-к-wi-fi-после-установки)
 
 ---
 
 ## 1. Подготовка
+
+<details>
+<summary><b>📶 Подключение к Wi-Fi (опционально)</b></summary>
+
+Если ноутбук подключается по Ethernet — пропускай этот блок. Для Wi-Fi используем встроенную утилиту `iwctl`.
+
+### Запуск
+
+```bash
+iwctl
+```
+
+Запустится интерактивная оболочка с приглашением `[iwd]#`.
+
+### Узнать имя беспроводного интерфейса
+
+```
+[iwd]# device list
+```
+
+Запомни имя устройства (обычно `wlan0`).
+
+### Если адаптер выключен
+
+```
+[iwd]# device <устройство> set-property Powered on
+[iwd]# adapter <адаптер> set-property Powered on
+```
+
+### Сканирование сетей
+
+```
+[iwd]# station <устройство> scan
+[iwd]# station <устройство> get-networks
+```
+
+### Подключение
+
+```
+[iwd]# station <устройство> connect <SSID>
+```
+
+Запросит пароль — введи и нажми Enter.
+
+### Выход
+
+`Ctrl+C` — возврат к стандартному shell.
+
+### Проверка
+
+```bash
+ping -c 3 archlinux.org
+```
+
+</details>
 
 ### 🕒 Синхронизация системного времени
 
@@ -135,7 +191,7 @@ swapon --show
 
 ```bash
 mkdir /mnt/boot
-mount /dev/<EFI-System> /mnt/boot/
+mount /dev/<EFI-System> /mnt/boot
 ```
 
 ---
@@ -257,8 +313,10 @@ blkid   # проверка
 ### Входим в систему
 
 ```bash
-arch-chroot /mnt
+arch-chroot -S /mnt
 ```
+
+> 💡 Флаг **`-S`** (systemd mode) — обязателен с конца 2025 года. Без него `bootctl install` на [шаге 6](#6-загрузчик-systemd-boot) не запишет EFI-запись в NVRAM из-за регрессии systemd (выводит `Not booted with EFI`). С `-S` всё работает.
 
 ---
 
@@ -361,6 +419,8 @@ systemctl mask NetworkManager-wait-online
 ```bash
 bootctl install
 ```
+
+> 💡 Команда сработает только если на [шаге 4](#4-установка-базовой-системы) ты зашёл в chroot через `arch-chroot -S /mnt`. В обычном `arch-chroot /mnt` `bootctl` выведет `Not booted with EFI` и не запишет загрузочную запись.
 
 ### Основной конфиг
 
@@ -473,14 +533,93 @@ userdbctl groups-of-user <имя_пользователя>
 
 ```bash
 pacman -S sudo
-visudo
+EDITOR=vim visudo
 ```
+
+> 💡 Переменная **`EDITOR=vim`** обязательна: в пакете `base` редактор `vi` отсутствует, есть только `vim` (поставлен через pacstrap). Без указания переменной `visudo` ищет `/usr/bin/vi` и падает с ошибкой `редактор не найден`.
 
 **Раскомментируем строку:**
 
 ```
 %wheel ALL=(ALL:ALL) ALL
 ```
+
+---
+
+## 8. Подключение к Wi-Fi после установки
+
+Если ноутбук подключается по Ethernet — пропускай этот раздел. Wi-Fi после установки настраивается через **NetworkManager** (уже включён нами на [шаге 5](#-включаем-networkmanager)).
+
+### 🚀 Быстрый способ — `nmcli`
+
+Включить Wi-Fi (если выключен):
+
+```bash
+nmcli radio wifi on
+```
+
+Посмотреть доступные сети:
+
+```bash
+nmcli device wifi list
+```
+
+Подключиться:
+
+```bash
+nmcli device wifi connect "<SSID>" password "<пароль>"
+```
+
+> 💡 Кавычки нужны, если в имени сети или пароле есть пробелы / спецсимволы.
+
+Проверить интернет:
+
+```bash
+ping -c 3 archlinux.org
+```
+
+### 🖥️ Удобный способ — `nmtui` (текстовое меню)
+
+```bash
+nmtui
+```
+
+В меню:
+
+1. **Activate a connection** → Enter
+2. Стрелками выбрать свою сеть → Enter
+3. Ввести пароль → OK
+4. **Back** → **Quit**
+
+### 🛠️ Полезные команды
+
+**Посмотреть текущее подключение:**
+
+```bash
+nmcli connection show --active
+```
+
+**Отключиться:**
+
+```bash
+nmcli device disconnect wlan0
+```
+
+**Удалить сохранённое подключение:**
+
+```bash
+nmcli connection delete "<SSID>"
+```
+
+**Если Wi-Fi-карта не видна:**
+
+```bash
+nmcli device status
+```
+
+> 💡 Должна быть строка вида `wlan0  wifi  ...`. Если её нет — отсутствует firmware. Проверь, что в pacstrap был пакет `linux-firmware`.
+
+NetworkManager автоматически сохраняет подключение — при следующих загрузках Wi-Fi подключится сам.
 
 ---
 

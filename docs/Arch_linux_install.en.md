@@ -15,10 +15,66 @@
 - [5. Configuration Inside chroot](#5-configuration-inside-chroot)
 - [6. systemd-boot Bootloader](#6-systemd-boot-bootloader)
 - [7. User Creation](#7-user-creation)
+- [8. Wi-Fi Connection After Installation](#8-wi-fi-connection-after-installation)
 
 ---
 
 ## 1. Preparation
+
+<details>
+<summary><b>📶 Wi-Fi connection (optional)</b></summary>
+
+If your laptop connects via Ethernet — skip this block. For Wi-Fi we use the built-in `iwctl` utility.
+
+### Launch
+
+```bash
+iwctl
+```
+
+An interactive shell with the `[iwd]#` prompt will start.
+
+### Find wireless interface name
+
+```
+[iwd]# device list
+```
+
+Remember the device name (usually `wlan0`).
+
+### If the adapter is off
+
+```
+[iwd]# device <device> set-property Powered on
+[iwd]# adapter <adapter> set-property Powered on
+```
+
+### Scan networks
+
+```
+[iwd]# station <device> scan
+[iwd]# station <device> get-networks
+```
+
+### Connect
+
+```
+[iwd]# station <device> connect <SSID>
+```
+
+It will ask for the password — enter it and press Enter.
+
+### Exit
+
+`Ctrl+C` — return to the standard shell.
+
+### Verify
+
+```bash
+ping -c 3 archlinux.org
+```
+
+</details>
 
 ### 🕒 System time synchronization
 
@@ -135,7 +191,7 @@ swapon --show
 
 ```bash
 mkdir /mnt/boot
-mount /dev/<EFI-System-partition> /mnt/boot/
+mount /dev/<EFI-System-partition> /mnt/boot
 ```
 
 ---
@@ -257,8 +313,10 @@ blkid   # verify
 ### Enter the system
 
 ```bash
-arch-chroot /mnt
+arch-chroot -S /mnt
 ```
+
+> 💡 The **`-S`** flag (systemd mode) — required since late 2025. Without it, `bootctl install` at [step 6](#6-systemd-boot-bootloader) won't write the EFI entry to NVRAM due to a systemd regression (outputs `Not booted with EFI`). With `-S` everything works.
 
 ---
 
@@ -361,6 +419,8 @@ systemctl mask NetworkManager-wait-online
 ```bash
 bootctl install
 ```
+
+> 💡 The command works only if you entered chroot via `arch-chroot -S /mnt` at [step 4](#4-base-system-installation). With regular `arch-chroot /mnt`, `bootctl` outputs `Not booted with EFI` and won't write the boot entry.
 
 ### Main config
 
@@ -473,14 +533,93 @@ userdbctl groups-of-user <username>
 
 ```bash
 pacman -S sudo
-visudo
+EDITOR=vim visudo
 ```
+
+> 💡 The **`EDITOR=vim`** variable is required: the `base` package doesn't include `vi`, only `vim` (installed via pacstrap). Without specifying the variable, `visudo` looks for `/usr/bin/vi` and fails with `editor not found`.
 
 **Uncomment the line:**
 
 ```
 %wheel ALL=(ALL:ALL) ALL
 ```
+
+---
+
+## 8. Wi-Fi Connection After Installation
+
+If your laptop connects via Ethernet — skip this section. After installation, Wi-Fi is configured through **NetworkManager** (already enabled by us at [step 5](#-enable-networkmanager)).
+
+### 🚀 Quick way — `nmcli`
+
+Enable Wi-Fi (if off):
+
+```bash
+nmcli radio wifi on
+```
+
+List available networks:
+
+```bash
+nmcli device wifi list
+```
+
+Connect:
+
+```bash
+nmcli device wifi connect "<SSID>" password "<password>"
+```
+
+> 💡 Quotes are required if the network name or password contains spaces / special characters.
+
+Test internet:
+
+```bash
+ping -c 3 archlinux.org
+```
+
+### 🖥️ Convenient way — `nmtui` (text menu)
+
+```bash
+nmtui
+```
+
+In the menu:
+
+1. **Activate a connection** → Enter
+2. Use arrows to select your network → Enter
+3. Enter password → OK
+4. **Back** → **Quit**
+
+### 🛠️ Useful commands
+
+**Show current connection:**
+
+```bash
+nmcli connection show --active
+```
+
+**Disconnect:**
+
+```bash
+nmcli device disconnect wlan0
+```
+
+**Delete saved connection:**
+
+```bash
+nmcli connection delete "<SSID>"
+```
+
+**If Wi-Fi card is not visible:**
+
+```bash
+nmcli device status
+```
+
+> 💡 There should be a line like `wlan0  wifi  ...`. If it's missing — firmware is absent. Check that `linux-firmware` was in pacstrap.
+
+NetworkManager automatically saves the connection — on subsequent boots, Wi-Fi will connect on its own.
 
 ---
 
