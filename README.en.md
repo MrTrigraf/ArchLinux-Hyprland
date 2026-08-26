@@ -128,7 +128,7 @@ git config --global user.email "12345678+github@users.noreply.github.com"
 
 ```bash
 # Clone the repository (entire repo into ~/.config/hypr — including the hyprland.lua entry point)
-git clone git@github.com:MrTrigraf/ArchLinux-Hyprland.git ~/.config/hypr
+git clone https://github.com/MrTrigraf/ArchLinux-Hyprland.git ~/.config/hypr
 
 # Run bootstrap (as a regular user, NOT via sudo)
 cd ~/.config/hypr
