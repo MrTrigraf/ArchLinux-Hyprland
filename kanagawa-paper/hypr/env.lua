@@ -29,13 +29,13 @@ hl.env("AWWW_TRANSITION_DURATION", "3")
 hl.env("AWWW_TRANSITION_FPS", "60")
 
 ---- Desktop ----
---hl.env("GBM_BACKEND", "nvidia-drm")
---hl.env("__GLX_VENDOR_LIBRARY_NAME", "nvidia")
---hl.env("LIBVA_DRIVER_NAME", "nvidia")
---hl.env("NVD_BACKEND", "direct")
+hl.env("GBM_BACKEND", "nvidia-drm")
+hl.env("__GLX_VENDOR_LIBRARY_NAME", "nvidia")
+hl.env("LIBVA_DRIVER_NAME", "nvidia")
+hl.env("NVD_BACKEND", "direct")
 
 
 ---- Laptop ----
-hl.env("LIBVA_DRIVER_NAME", "iHD")
-hl.env("VDPAU_DRIVER", "va_gl") --нужен пакет libvdpau-va-gl
+--hl.env("LIBVA_DRIVER_NAME", "iHD")
+--hl.env("VDPAU_DRIVER", "va_gl") --нужен пакет libvdpau-va-gl
 

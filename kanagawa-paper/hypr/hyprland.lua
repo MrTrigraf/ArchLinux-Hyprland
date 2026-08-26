@@ -14,20 +14,20 @@ require("layerrules")
 ------------------
 
 --monitor.Deskstop
---hl.monitor({
---   output   = "HDMI-A-1",
---    mode     = "1920x1080@144",
---    position = "auto",
---    scale    = "1.0",
---})
+hl.monitor({
+   output   = "HDMI-A-1",
+    mode     = "1920x1080@144",
+    position = "auto",
+    scale    = "1.00",
+})
 
 --monitor.Laptop
-hl.monitor({
-    output   = "eDP-1",
-    mode     = "2160x1440@60",
-    position = "auto",
-    scale    = "1.33",
-})
+--hl.monitor({
+--    output   = "eDP-1",
+--    mode     = "2160x1440@60",
+--    position = "auto",
+--    scale    = "1.33",
+--})
 
 -------------------
 ---- AUTOSTART ----
