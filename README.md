@@ -135,7 +135,8 @@ cd ~/.config/hypr
 ./bootstrap.sh
 ```
 
-> Если у тебя настроен SSH-ключ для GitHub — можно использовать `git@github.com:MrTrigraf/NVIM.git` вместо HTTPS-URL.
+> Если у тебя настроен SSH-ключ для GitHub — можно использовать `git@github.com:MrTrigraf/ArchLinux-Hyprland.git` вместо HTTPS-URL.
+
 После завершения `bootstrap.sh` — выйти из tty (`exit`) и заново залогиниться. Fish автоматически запустит Hyprland через `exec start-hyprland`.
 
 [⬆ Back to the Top](#Table-of-Contents)
