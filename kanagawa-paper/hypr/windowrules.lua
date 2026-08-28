@@ -20,11 +20,11 @@ hl.workspace_rule({
   default   = true,
 })
 
-hl.workspace_rule({
-  workspace = "3",
-  monitor   = "eDP-1",    -- ноут
-  default   = true,
-})
+--hl.workspace_rule({
+--  workspace = "3",
+--  monitor   = "eDP-1",    -- ноут
+--  default   = true,
+--})
 
 -- ============================================================================
 -- GLOBAL RULES

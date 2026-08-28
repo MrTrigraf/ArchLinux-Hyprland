@@ -90,6 +90,11 @@ sudo mkfs.btrfs -f -L Game /dev/<раздел>
 sudo mkdir -p /disks/game
 ```
 
+> Cтандартные пути монтирования:
+> /media/
+> /mnt/
+> /run/media/<user>/
+
 ### 6. Узнать UUID раздела
 
 ```bash

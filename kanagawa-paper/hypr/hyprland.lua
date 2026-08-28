@@ -42,6 +42,7 @@ hl.on("hyprland.start", function ()
   hl.exec_cmd("hypridle")
   hl.exec_cmd("qs -p ~/.config/hypr/kanagawa-paper/quickshell")
   hl.exec_cmd("hyprlock --config ~/.config/hypr/kanagawa-paper/hyprlock/hyprlockStart.conf")
+  hl.exec_cmd("firefox", { workspace = "1 silent" })
 end)
 
 ---------------

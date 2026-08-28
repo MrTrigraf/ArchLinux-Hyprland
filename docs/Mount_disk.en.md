@@ -88,6 +88,11 @@ sudo mkfs.btrfs -f -L Game /dev/<partition>
 sudo mkdir -p /disks/game
 ```
 
+> Standard mount paths:
+> /media/
+> /mnt/
+> /run/media/<user>/
+
 ### 6. Get the partition UUID
 
 ```bash
