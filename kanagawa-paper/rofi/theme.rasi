@@ -39,7 +39,7 @@
 
 /* ── Корневое окно ────────────────────────────────────────── */
 window {
-    width:              40%;
+    width:              25%;
 
     location:           center;
     anchor:             center;

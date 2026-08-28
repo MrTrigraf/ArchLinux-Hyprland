@@ -73,6 +73,8 @@
   + [Возможности](#Features)
   + [HotKeys](#HotKeys)
   + [Установленные пакеты](#Packages)
++ [Дополнительно](#Additional)
+  + [Монтирование дополнительного диска](#Mount-Disk)
 
 ---
 
@@ -254,5 +256,22 @@ cd ~/.config/hypr
 - `papirus-folders-git` — цветные папки для Papirus-Dark
 
 </details>
+
+[⬆ Back to the Top](#Table-of-Contents)
+
+---
+
+<!-- ===================== ADDITIONAL ===================== -->
+<a name="Additional"></a>
+<h2 align="center">🧩 Дополнительно</h2>
+
+<a name="Mount-Disk"></a>
+### 💽 Монтирование дополнительного диска
+
+Подключение отдельного SSD (например, под игры) с автомонтированием через
+`/etc/fstab`, строго по UUID. Инструкция включает выбор между `ext4` и `btrfs`
+и проверку конфигурации до перезагрузки.
+
+Полная инструкция — [`docs/Mount_disk.md`](docs/Mount_disk.md).
 
 [⬆ Back to the Top](#Table-of-Contents)

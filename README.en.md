@@ -73,6 +73,8 @@
   + [Features](#Features)
   + [HotKeys](#HotKeys)
   + [Installed Packages](#Packages)
++ [Additional](#Additional)
+  + [Mounting an Additional Disk](#Mount-Disk)
 
 ---
 
@@ -254,5 +256,22 @@ Full list — in `~/.config/hypr/kanagawa-paper/hypr/keybindings.lua`.
 - `papirus-folders-git` — colored folders for Papirus-Dark
 
 </details>
+
+[⬆ Back to the Top](#Table-of-Contents)
+
+---
+
+<!-- ===================== ADDITIONAL ===================== -->
+<a name="Additional"></a>
+<h2 align="center">🧩 Additional</h2>
+
+<a name="Mount-Disk"></a>
+### 💽 Mounting an Additional Disk
+
+Attaching a separate SSD (e.g. for games) with auto-mount via `/etc/fstab`,
+strictly by UUID. The guide covers choosing between `ext4` and `btrfs` and
+verifying the config before rebooting.
+
+Full guide — [`docs/Mount_disk.en.md`](docs/Mount_disk.en.md).
 
 [⬆ Back to the Top](#Table-of-Contents)
