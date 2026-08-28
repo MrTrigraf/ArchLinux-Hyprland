@@ -75,6 +75,7 @@
   + [Installed Packages](#Packages)
 + [Additional](#Additional)
   + [Mounting an Additional Disk](#Mount-Disk)
+  + [Installing and Running Games](#Gaming)
 
 ---
 
@@ -273,5 +274,15 @@ strictly by UUID. The guide covers choosing between `ext4` and `btrfs` and
 verifying the config before rebooting.
 
 Full guide — [`docs/Mount_disk.en.md`](docs/Mount_disk.en.md).
+
+[⬆ Back to the Top](#Table-of-Contents)
+
+<a name="Gaming"></a>
+### 🎮 Installing and Running Games
+
+The gaming stack in three stages: Steam + Proton, Lutris + Heroic (Epic / GOG),
+MangoHud. Covers all hardware configurations (NVIDIA / AMD / Intel).
+
+Full guide — [`docs/Gaming_setup.en.md`](docs/Gaming_setup.en.md).
 
 [⬆ Back to the Top](#Table-of-Contents)

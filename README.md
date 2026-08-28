@@ -75,6 +75,7 @@
   + [Установленные пакеты](#Packages)
 + [Дополнительно](#Additional)
   + [Монтирование дополнительного диска](#Mount-Disk)
+  + [Установка и запуск игр](#Gaming)
 
 ---
 
@@ -273,5 +274,15 @@ cd ~/.config/hypr
 и проверку конфигурации до перезагрузки.
 
 Полная инструкция — [`docs/Mount_disk.md`](docs/Mount_disk.md).
+
+[⬆ Back to the Top](#Table-of-Contents)
+
+<a name="Gaming"></a>
+### 🎮 Установка и запуск игр
+
+Игровая инфраструктура в три этапа: Steam + Proton, Lutris + Heroic (Epic / GOG),
+MangoHud. Учитывает все конфигурации железа (NVIDIA / AMD / Intel).
+
+Полная инструкция — [`docs/Gaming_setup.md`](docs/Gaming_setup.md).
 
 [⬆ Back to the Top](#Table-of-Contents)
