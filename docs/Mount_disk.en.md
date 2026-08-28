@@ -89,9 +89,10 @@ sudo mkdir -p /disks/game
 ```
 
 > Standard mount paths:
-> /media/
-> /mnt/
-> /run/media/<user>/
+>
+> - `/media/`
+> - `/mnt/`
+> - `/run/media/<user>/`
 
 ### 6. Get the partition UUID
 
@@ -121,6 +122,24 @@ Field notes: `noatime` — don't update file access times (less SSD wear, faster
 for btrfs `compress=zstd:1` is light compression, `ssd`/`discard=async` are SSD
 optimizations; the last field (fsck) is `2` for ext4 (check after the root
 partition) and `0` for btrfs (btrfs doesn't use traditional boot-time fsck).
+
+> 💡 **Showing the disk in the file manager.** If you want the disk to appear in
+> the GNOME Files (Nautilus) sidebar next to your other drives, add `x-gvfs-show`
+> to the mount options. It works with any filesystem (both ext4 and btrfs). Just
+> append `,x-gvfs-show` to your line's option list, for example:
+>
+> ```
+> # ext4
+> UUID=<your-uuid>  /disks/game  ext4   defaults,noatime,x-gvfs-show  0 2
+>
+> # btrfs
+> UUID=<your-uuid>  /disks/game  btrfs  rw,noatime,compress=zstd:1,ssd,discard=async,space_cache=v2,nodev,nosuid,x-gvfs-show  0 0
+> ```
+>
+> Without this option the disk won't show up in the sidebar on paths like `/mnt`
+> or `/disks` — it's not about the path itself, it's specifically `x-gvfs-show`.
+> After editing, restart Nautilus (`nautilus -q`); if it doesn't appear right
+> away, log out and back in.
 
 ### 8. Verify BEFORE rebooting
 

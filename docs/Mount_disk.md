@@ -91,9 +91,10 @@ sudo mkdir -p /disks/game
 ```
 
 > Cтандартные пути монтирования:
-> /media/
-> /mnt/
-> /run/media/<user>/
+>
+> - `/media/`
+> - `/mnt/`
+> - `/run/media/<user>/`
 
 ### 6. Узнать UUID раздела
 
@@ -125,6 +126,23 @@ UUID=<твой-uuid>  /disks/game  btrfs  rw,noatime,compress=zstd:1,ssd,discard
 `ssd`/`discard=async` — оптимизации под SSD; последнее поле (fsck) для ext4 = `2`
 (проверять после корневого раздела), для btrfs = `0` (btrfs не использует
 традиционный fsck при загрузке).
+
+> 💡 **Отображение в файловом менеджере.** Если хочешь, чтобы диск был виден в
+> боковой панели GNOME Files (Nautilus) рядом с другими дисками, добавь в опции
+> монтирования `x-gvfs-show`. Работает для любой файловой системы (и ext4, и
+> btrfs). Просто допиши `,x-gvfs-show` к списку опций своей строки, например:
+>
+> ```
+> # ext4
+> UUID=<твой-uuid>  /disks/game  ext4   defaults,noatime,x-gvfs-show  0 2
+>
+> # btrfs
+> UUID=<твой-uuid>  /disks/game  btrfs  rw,noatime,compress=zstd:1,ssd,discard=async,space_cache=v2,nodev,nosuid,x-gvfs-show  0 0
+> ```
+>
+> Без этой опции диск на путях вроде `/mnt` или `/disks` в панель не попадёт —
+> дело не в самом пути, а именно в `x-gvfs-show`. После правки перезапусти
+> Nautilus (`nautilus -q`), а если не появился сразу — перелогинься.
 
 ### 8. Проверить ДО перезагрузки
 
