@@ -164,6 +164,41 @@ hl.window_rule({
   size  = { "(monitor_w*0.75)", "(monitor_h*0.8)" },
 })
 
+---- steam ----
+-- Главное окно Steam (библиотека). Плавающее, по центру, как остальные app-окна.
+hl.window_rule({
+  name   = "steam-main",
+  match  = { class = "^(steam)$", title = "^(Steam)$" },
+  float  = true,
+  size   = { "(monitor_w*0.7)", "(monitor_h*0.8)" },
+  center = true,
+})
+
+-- Список друзей — небольшое плавающее окно.
+hl.window_rule({
+  name   = "steam-friends",
+  match  = { class = "^(steam)$", title = "(Список друзей)" },
+  float  = true,
+  size   = { "(monitor_w*0.25)", "(monitor_h*0.6)" },
+  center = true,
+})
+
+-- Настройки
+hl.window_rule({
+  name   = "steam-windows",
+  match  = { class = "^(steam)$", title = "(Настройки)" },
+  float  = true,
+  size   = { "(monitor_w*0.6)", "(monitor_h*0.65)" },
+  center = true,
+})
+
+-- Отключить анимации открытия/закрытия для всех окон Steam.
+hl.window_rule({
+  name    = "steam-no-anim",
+  match   = { class = "^(steam)$" },
+  no_anim = true,
+})
+
 ---- viewnior ----
 hl.window_rule({
   name  = "viewnior",
