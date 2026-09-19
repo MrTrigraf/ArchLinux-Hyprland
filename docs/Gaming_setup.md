@@ -13,6 +13,7 @@
 + [Этап 1 — Базовая установка (Steam + Proton)](#Stage-1)
 + [Этап 2 — Lutris + Heroic](#Stage-2)
 + [Этап 3 — MangoHud](#Stage-3)
++ [Этап 4 — Игровой режим Hyprland (gamemode + эффекты)](#Stage-4)
 
 > 📝 Гайд предполагает, что **видеодрайвер уже установлен** при установке системы
 > (см. [`Arch_linux_install.md`](Arch_linux_install.md), раздел про видеокарты).
@@ -154,6 +155,8 @@ GPU (GeForce / Radeon / Intel), а не только программный `llv
 > фиксами) ставится в Этапе 2 и тоже появляется в этом списке. Для многих игр
 > штатного Proton достаточно, но Proton-GE часто чинит проблемные тайтлы.
 
+⬆ [Наверх](#Table-of-Contents)
+
 ---
 
 <a name="Stage-2"></a>
@@ -243,6 +246,8 @@ GE-Proton), но для старта достаточно дефолтных —
 > ⚠️ **Античит.** Игры с kernel-level античитом (многие сетевые тайтлы) обычно
 > **не запускаются** через Heroic/Wine/Proton независимо от выбранного runtime —
 > это ограничение самого античита, не Heroic. Проверяй статус игры на areweanticheatyet.com.
+
+⬆ [Наверх](#Table-of-Contents)
 
 ---
 
@@ -401,3 +406,93 @@ output_folder=/home/<имя>/mangohud-logs
 Логирование включается на лету клавишей `Shift_L + F2`. Полученные логи можно
 визуализировать (график фреймтайма, 1%-low, средний FPS) локально или загрузив
 на FlightlessMango.com.
+
+⬆ [Наверх](#Table-of-Contents)
+
+---
+
+<a name="Stage-4"></a>
+## Этап 4. Игровой режим Hyprland (gamemode + эффекты)
+
+На время игры гасим тяжёлые для GPU эффекты Hyprland (анимации, блюр, тени,
+прозрачность) и возвращаем после выхода. CPU-governor на время игры поднимается
+до `performance`. Всё срабатывает автоматически через хуки gamemode — при запуске
+игры через `gamemoderun` (или галку gamemode в Lutris/Heroic).
+
+> 📝 Требует установленного `gamemode` (Этап 1, шаг 4). Проверка, что демон
+> активен: `gamemoded -t` → должно быть `gamemode request succeeded and is active`.
+
+### 1. Скрипт переключения эффектов
+
+Скрипт `game-mode.fish` уже в репозитории темы:
+`~/.config/hypr/kanagawa-paper/gamemode/game-mode.fish`. Сделать исполняемым:
+
+```bash
+chmod +x ~/.config/hypr/kanagawa-paper/gamemode/game-mode.fish
+```
+
+Что делает:
+- `game-mode.fish on` — гасит эффекты одним вызовом `hyprctl eval` (в памяти,
+  `hyprland.lua` не трогается);
+- `game-mode.fish off` — `hyprctl reload`: Hyprland перечитывает конфиг и
+  возвращает все значения как в файле.
+
+> ⚠️ На Lua-конфиге (Hyprland ≥ 0.55) `hyprctl keyword` НЕ работает — только
+> `hyprctl eval` с `hl.config({...})`. Именно поэтому скрипт использует `eval`.
+
+### 2. Конфиг gamemode
+
+gamemode читает конфиг **только** из `~/.config/gamemode.ini` (в тему убрать
+нельзя). Создать файл:
+
+```bash
+vim ~/.config/gamemode.ini
+```
+
+Содержимое:
+
+```ini
+[general]
+# CPU-governor на время игры (после выхода вернётся прежний).
+desiredgov=performance
+
+[custom]
+# Старт игры → гасим эффекты Hyprland.
+start=$HOME/.config/hypr/kanagawa-paper/gamemode/game-mode.fish on
+# Выход из игры → возвращаем через hyprctl reload.
+end=$HOME/.config/hypr/kanagawa-paper/gamemode/game-mode.fish off
+```
+
+> Путь в `start`/`end` использует `$HOME` — он раскрывается в твою домашнюю папку.
+> Тильду (`~`) gamemode здесь **не** разворачивает, поэтому именно `$HOME`.
+
+### 3. Как запускать игру с игровым режимом
+
+Игровой режим активируется, когда игра идёт через gamemode:
+
+- **Steam:** правый клик по игре → **Свойства** → **Параметры запуска**:
+  ```
+  gamemoderun mangohud %command%
+  ```
+  (`gamemoderun` — первым; `mangohud` можно убрать, если оверлей не нужен).
+- **Lutris:** в настройках игры (или глобально) включи тумблер **Feral GameMode**.
+- **Heroic:** в настройках игры — отдельный тумблер GameMode.
+
+### 4. Проверка
+
+Запусти gamemode вручную на 10 секунд и посмотри, гаснут ли эффекты:
+
+```bash
+gamemoderun sleep 10 &
+hyprctl getoption animations:enabled   # во время: bool: false
+```
+
+После завершения `sleep`:
+
+```bash
+hyprctl getoption animations:enabled   # после: bool: true
+```
+
+Если во время `sleep` анимации `false`, а после — `true`, режим работает.
+
+⬆ [Наверх](#Table-of-Contents)

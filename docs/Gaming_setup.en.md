@@ -13,6 +13,7 @@
 + [Stage 1 — Base install (Steam + Proton)](#Stage-1)
 + [Stage 2 — Lutris + Heroic](#Stage-2)
 + [Stage 3 — MangoHud](#Stage-3)
++ [Stage 4 — Hyprland game mode (gamemode + effects)](#Stage-4)
 
 > 📝 The guide assumes the **GPU driver is already installed** during system
 > setup (see [`Arch_linux_install.en.md`](Arch_linux_install.en.md), the
@@ -155,6 +156,8 @@ version. Checking compatibility reports on ProtonDB is useful.
 > installed in Stage 2 and also appears in this list. Stock Proton is enough for
 > many games, but Proton-GE often fixes problematic titles.
 
+⬆ [Back to top](#Table-of-Contents)
+
 ---
 
 <a name="Stage-2"></a>
@@ -245,6 +248,8 @@ manually.
 > usually **won't launch** through Heroic/Wine/Proton regardless of the chosen
 > runtime — this is a limitation of the anti-cheat itself, not Heroic. Check a
 > game's status on areweanticheatyet.com.
+
+⬆ [Back to top](#Table-of-Contents)
 
 ---
 
@@ -402,3 +407,95 @@ output_folder=/home/<user>/mangohud-logs
 Logging toggles on the fly with `Shift_L + F2`. The resulting logs can be
 visualized (frametime graph, 1% lows, average FPS) locally or by uploading to
 FlightlessMango.com.
+
+⬆ [Back to top](#Table-of-Contents)
+
+---
+
+<a name="Stage-4"></a>
+## Stage 4. Hyprland game mode (gamemode + effects)
+
+While gaming, heavy GPU effects of Hyprland (animations, blur, shadows,
+transparency) are disabled and restored on exit. The CPU governor is raised to
+`performance` for the duration of the game. Everything triggers automatically via
+gamemode hooks — whenever a game runs through `gamemoderun` (or the gamemode
+toggle in Lutris/Heroic).
+
+> 📝 Requires `gamemode` installed (Stage 1, step 4). Check the daemon is active:
+> `gamemoded -t` → should print `gamemode request succeeded and is active`.
+
+### 1. The effect-toggle script
+
+The `game-mode.fish` script already ships in the theme repo:
+`~/.config/hypr/kanagawa-paper/gamemode/game-mode.fish`. Make it executable:
+
+```bash
+chmod +x ~/.config/hypr/kanagawa-paper/gamemode/game-mode.fish
+```
+
+What it does:
+- `game-mode.fish on` — disables the effects in a single `hyprctl eval` call (in
+  memory, `hyprland.lua` is not touched);
+- `game-mode.fish off` — `hyprctl reload`: Hyprland re-reads the config and
+  restores every value as written in the file.
+
+> ⚠️ On the Lua config (Hyprland ≥ 0.55) `hyprctl keyword` does NOT work — only
+> `hyprctl eval` with `hl.config({...})`. That's why the script uses `eval`.
+
+### 2. The gamemode config
+
+gamemode reads its config **only** from `~/.config/gamemode.ini` (it can't live
+in the theme folder). Create the file:
+
+```bash
+vim ~/.config/gamemode.ini
+```
+
+Contents:
+
+```ini
+[general]
+# CPU governor while gaming (the previous one is restored on exit).
+desiredgov=performance
+
+[custom]
+# Game start → disable Hyprland effects.
+start=$HOME/.config/hypr/kanagawa-paper/gamemode/game-mode.fish on
+# Game exit → restore via hyprctl reload.
+end=$HOME/.config/hypr/kanagawa-paper/gamemode/game-mode.fish off
+```
+
+> The `start`/`end` path uses `$HOME` — it expands to your home directory.
+> gamemode does **not** expand the tilde (`~`) here, so use `$HOME`.
+
+### 3. How to launch a game with game mode
+
+Game mode kicks in when the game runs through gamemode:
+
+- **Steam:** right-click the game → **Properties** → **Launch Options**:
+  ```
+  gamemoderun mangohud %command%
+  ```
+  (`gamemoderun` first; drop `mangohud` if you don't need the overlay).
+- **Lutris:** enable the **Feral GameMode** toggle in the game's settings (or
+  globally).
+- **Heroic:** a dedicated GameMode toggle in the game settings.
+
+### 4. Verification
+
+Run gamemode manually for 10 seconds and watch the effects toggle:
+
+```bash
+gamemoderun sleep 10 &
+hyprctl getoption animations:enabled   # during: bool: false
+```
+
+After `sleep` finishes:
+
+```bash
+hyprctl getoption animations:enabled   # after: bool: true
+```
+
+If animations are `false` during `sleep` and `true` after, game mode works.
+
+⬆ [Back to top](#Table-of-Contents)
