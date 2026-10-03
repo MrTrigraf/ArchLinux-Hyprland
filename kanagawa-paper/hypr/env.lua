@@ -8,7 +8,7 @@ hl.env("XCURSOR_THEME", "XCursor-Pro-Hyprcursor-Dark")
 hl.env("HYPRCURSOR_THEME", "XCursor-Pro-Hyprcursor-Dark")
 
 hl.env("GDK_BACKEND", "wayland,x11,*")
-hl.env("SDL_VIDEODRIVER", "wayland")
+--hl.env("SDL_VIDEODRIVER", "wayland")
 hl.env("CLUTTER_BACKEND", "wayland")
 
 hl.env("XDG_CURRENT_DESKTOP", "Hyprland")

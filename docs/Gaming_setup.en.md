@@ -415,11 +415,11 @@ FlightlessMango.com.
 <a name="Stage-4"></a>
 ## Stage 4. Hyprland game mode (gamemode + effects)
 
-While gaming, heavy GPU effects of Hyprland (animations, blur, shadows,
-transparency) are disabled and restored on exit. The CPU governor is raised to
-`performance` for the duration of the game. Everything triggers automatically via
-gamemode hooks — whenever a game runs through `gamemoderun` (or the gamemode
-toggle in Lutris/Heroic).
+While gaming, gamemode does several things at once: disables heavy GPU effects of
+Hyprland (animations, blur, shadows, transparency), raises the CPU governor to
+`performance`, and bumps the game process priority (CPU and I/O). Everything is
+restored on exit. It triggers automatically whenever a game runs through
+`gamemoderun` (or the gamemode toggle in Lutris/Heroic).
 
 > 📝 Requires `gamemode` installed (Stage 1, step 4). Check the daemon is active:
 > `gamemoded -t` → should print `gamemode request succeeded and is active`.
@@ -442,7 +442,22 @@ What it does:
 > ⚠️ On the Lua config (Hyprland ≥ 0.55) `hyprctl keyword` does NOT work — only
 > `hyprctl eval` with `hl.config({...})`. That's why the script uses `eval`.
 
-### 2. The gamemode config
+### 2. Add your user to the gamemode group
+
+`renice` (raising the game's priority, see the next step) requires your user to
+be in the `gamemode` group. Add it:
+
+```bash
+sudo usermod -aG gamemode $USER
+```
+
+Then **log out and back in** so the membership applies. Verify:
+
+```bash
+groups | grep -o gamemode   # should print: gamemode
+```
+
+### 3. The gamemode config
 
 gamemode reads its config **only** from `~/.config/gamemode.ini` (it can't live
 in the theme folder). Create the file:
@@ -457,6 +472,10 @@ Contents:
 [general]
 # CPU governor while gaming (the previous one is restored on exit).
 desiredgov=performance
+# Game process CPU priority: applied as nice -10 (0-20, 0 = no change).
+renice=10
+# I/O priority: 0 = highest (best-effort), range 0-7.
+ioprio=0
 
 [custom]
 # Game start → disable Hyprland effects.
@@ -468,7 +487,7 @@ end=$HOME/.config/hypr/kanagawa-paper/gamemode/game-mode.fish off
 > The `start`/`end` path uses `$HOME` — it expands to your home directory.
 > gamemode does **not** expand the tilde (`~`) here, so use `$HOME`.
 
-### 3. How to launch a game with game mode
+### 4. How to launch a game with game mode
 
 Game mode kicks in when the game runs through gamemode:
 
@@ -481,13 +500,14 @@ Game mode kicks in when the game runs through gamemode:
   globally).
 - **Heroic:** a dedicated GameMode toggle in the game settings.
 
-### 4. Verification
+### 5. Verification
 
-Run gamemode manually for 10 seconds and watch the effects toggle:
+Run gamemode manually for 10 seconds and watch the effects and priority:
 
 ```bash
 gamemoderun sleep 10 &
 hyprctl getoption animations:enabled   # during: bool: false
+ps -o pid,ni,cmd -C sleep              # the NI column should be -10 (renice=10)
 ```
 
 After `sleep` finishes:
@@ -496,6 +516,7 @@ After `sleep` finishes:
 hyprctl getoption animations:enabled   # after: bool: true
 ```
 
-If animations are `false` during `sleep` and `true` after, game mode works.
+If animations are `false` and `NI = -10` during `sleep`, and animations are
+`true` afterwards, everything works.
 
 ⬆ [Back to top](#Table-of-Contents)

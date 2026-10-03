@@ -414,10 +414,11 @@ output_folder=/home/<имя>/mangohud-logs
 <a name="Stage-4"></a>
 ## Этап 4. Игровой режим Hyprland (gamemode + эффекты)
 
-На время игры гасим тяжёлые для GPU эффекты Hyprland (анимации, блюр, тени,
-прозрачность) и возвращаем после выхода. CPU-governor на время игры поднимается
-до `performance`. Всё срабатывает автоматически через хуки gamemode — при запуске
-игры через `gamemoderun` (или галку gamemode в Lutris/Heroic).
+На время игры gamemode делает сразу несколько вещей: гасит тяжёлые для GPU
+эффекты Hyprland (анимации, блюр, тени, прозрачность), поднимает CPU-governor до
+`performance`, повышает приоритет игрового процесса (CPU и I/O). Всё возвращается
+после выхода. Срабатывает автоматически при запуске игры через `gamemoderun`
+(или галку gamemode в Lutris/Heroic).
 
 > 📝 Требует установленного `gamemode` (Этап 1, шаг 4). Проверка, что демон
 > активен: `gamemoded -t` → должно быть `gamemode request succeeded and is active`.
@@ -440,7 +441,23 @@ chmod +x ~/.config/hypr/kanagawa-paper/gamemode/game-mode.fish
 > ⚠️ На Lua-конфиге (Hyprland ≥ 0.55) `hyprctl keyword` НЕ работает — только
 > `hyprctl eval` с `hl.config({...})`. Именно поэтому скрипт использует `eval`.
 
-### 2. Конфиг gamemode
+### 2. Добавить пользователя в группу gamemode
+
+`renice` (повышение приоритета игры, см. следующий шаг) требует, чтобы
+пользователь был в группе `gamemode`. Добавить:
+
+```bash
+sudo usermod -aG gamemode $USER
+```
+
+После этого нужен **перелогин** (выход из сессии и вход), чтобы членство
+применилось. Проверка:
+
+```bash
+groups | grep -o gamemode   # должно вывести: gamemode
+```
+
+### 3. Конфиг gamemode
 
 gamemode читает конфиг **только** из `~/.config/gamemode.ini` (в тему убрать
 нельзя). Создать файл:
@@ -455,6 +472,10 @@ vim ~/.config/gamemode.ini
 [general]
 # CPU-governor на время игры (после выхода вернётся прежний).
 desiredgov=performance
+# Приоритет CPU игрового процесса: применяется как nice -10 (0-20, 0 = без изменений).
+renice=10
+# Приоритет I/O: 0 = высший (best-effort), диапазон 0-7.
+ioprio=0
 
 [custom]
 # Старт игры → гасим эффекты Hyprland.
@@ -466,7 +487,7 @@ end=$HOME/.config/hypr/kanagawa-paper/gamemode/game-mode.fish off
 > Путь в `start`/`end` использует `$HOME` — он раскрывается в твою домашнюю папку.
 > Тильду (`~`) gamemode здесь **не** разворачивает, поэтому именно `$HOME`.
 
-### 3. Как запускать игру с игровым режимом
+### 4. Как запускать игру с игровым режимом
 
 Игровой режим активируется, когда игра идёт через gamemode:
 
@@ -478,13 +499,15 @@ end=$HOME/.config/hypr/kanagawa-paper/gamemode/game-mode.fish off
 - **Lutris:** в настройках игры (или глобально) включи тумблер **Feral GameMode**.
 - **Heroic:** в настройках игры — отдельный тумблер GameMode.
 
-### 4. Проверка
+### 5. Проверка
 
-Запусти gamemode вручную на 10 секунд и посмотри, гаснут ли эффекты:
+Запусти gamemode вручную на 10 секунд и посмотри, гаснут ли эффекты и поднимается
+ли приоритет:
 
 ```bash
 gamemoderun sleep 10 &
 hyprctl getoption animations:enabled   # во время: bool: false
+ps -o pid,ni,cmd -C sleep              # колонка NI должна быть -10 (renice=10)
 ```
 
 После завершения `sleep`:
@@ -493,6 +516,7 @@ hyprctl getoption animations:enabled   # во время: bool: false
 hyprctl getoption animations:enabled   # после: bool: true
 ```
 
-Если во время `sleep` анимации `false`, а после — `true`, режим работает.
+Если во время `sleep` анимации `false` и `NI = -10`, а после — анимации `true`,
+всё работает.
 
 ⬆ [Наверх](#Table-of-Contents)
