@@ -207,7 +207,7 @@ pacstrap /mnt  <базовый набор>  <CPU-microcode>  <GPU-драйвер
 ### 🧩 Базовый набор (общий для всех конфигураций)
 
 ```
-base base-devel linux-zen linux-zen-headers linux-firmware vim networkmanager btrfs-progs kitty
+base base-devel linux-zen linux-zen-headers linux-firmware vim networkmanager btrfs-progs kitty git
 ```
 
 ### ⚙️ CPU-microcode
@@ -274,7 +274,7 @@ mesa vulkan-intel libva-intel-driver
 <summary><b>Intel CPU + NVIDIA GPU</b> (RTX 20xx и новее)</summary>
 
 ```bash
-pacstrap /mnt base base-devel linux-zen linux-zen-headers linux-firmware vim networkmanager btrfs-progs kitty intel-ucode nvidia-open-dkms nvidia-utils nvidia-settings libva-nvidia-driver
+pacstrap /mnt base base-devel linux-zen linux-zen-headers linux-firmware vim networkmanager btrfs-progs kitty git intel-ucode nvidia-open-dkms nvidia-utils nvidia-settings libva-nvidia-driver
 ```
 
 </details>
@@ -283,7 +283,7 @@ pacstrap /mnt base base-devel linux-zen linux-zen-headers linux-firmware vim net
 <summary><b>AMD CPU + AMD GPU</b></summary>
 
 ```bash
-pacstrap /mnt base base-devel linux-zen linux-zen-headers linux-firmware vim networkmanager btrfs-progs kitty amd-ucode mesa vulkan-radeon libva-mesa-driver
+pacstrap /mnt base base-devel linux-zen linux-zen-headers linux-firmware vim networkmanager btrfs-progs kitty git amd-ucode mesa vulkan-radeon libva-mesa-driver
 ```
 
 </details>
@@ -292,7 +292,7 @@ pacstrap /mnt base base-devel linux-zen linux-zen-headers linux-firmware vim net
 <summary><b>Intel CPU + Intel iGPU</b> (Broadwell+)</summary>
 
 ```bash
-pacstrap /mnt base base-devel linux-zen linux-zen-headers linux-firmware vim networkmanager btrfs-progs kitty intel-ucode mesa vulkan-intel intel-media-driver
+pacstrap /mnt base base-devel linux-zen linux-zen-headers linux-firmware vim networkmanager btrfs-progs kitty git intel-ucode mesa vulkan-intel intel-media-driver
 ```
 
 </details>
