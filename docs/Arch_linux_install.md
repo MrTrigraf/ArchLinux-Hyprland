@@ -5,20 +5,17 @@
 ![Russian](https://img.shields.io/badge/lang-Russian-1793d1) [![English](https://img.shields.io/badge/lang-English-lightgrey)](Arch_linux_install.en.md)
 
 ---
-
 ## 📋 Содержание
 
 - [1. Подготовка](#1-подготовка)
 - [2. Разметка диска](#2-разметка-диска)
-- [3. Файловая система btrfs](#3-файловая-система-btrfs)
+- [3. Файловая система btrfs (ssd)](#3-файловая-система-btrfs-ssd)
 - [4. Установка базовой системы](#4-установка-базовой-системы)
 - [5. Настройка внутри chroot](#5-настройка-внутри-chroot)
 - [6. Загрузчик systemd-boot](#6-загрузчик-systemd-boot)
 - [7. Создание пользователя](#7-создание-пользователя)
 - [8. Подключение к Wi-Fi после установки](#8-подключение-к-wi-fi-после-установки)
-
 ---
-
 ## 1. Подготовка
 
 <details>
@@ -76,6 +73,14 @@ ping -c 3 archlinux.org
 
 </details>
 
+### 🔍 Проверка режима загрузки UEFI
+
+```bash
+cat /sys/firmware/efi/fw_platform_size
+```
+
+> 💡 `64` — UEFI x64, всё в порядке. `32` — 32-битный UEFI (IA32): поддерживается, но выбор загрузчиков ограничен. `No such file or directory` — live-образ загружен в режиме BIOS/CSM: перезагрузись и выбери UEFI-вариант флешки в меню загрузки.
+
 ### 🕒 Синхронизация системного времени
 
 ```bash
@@ -93,6 +98,8 @@ lsblk
 ```bash
 wipefs --all /dev/<ваш-диск>
 ```
+
+> ⚠️ Команда **безвозвратно** стирает разметку всего диска. Дважды проверь имя диска по выводу `lsblk`.
 
 ---
 
@@ -129,7 +136,7 @@ mkswap /dev/<раздел-Linux-swap>
 
 ---
 
-## 3. Файловая система btrfs
+## 3. Файловая система btrfs (ssd)
 
 ### Монтируем корневой раздел
 
@@ -210,6 +217,8 @@ pacstrap /mnt  <базовый набор>  <CPU-microcode>  <GPU-драйвер
 base base-devel linux-zen linux-zen-headers linux-firmware vim networkmanager btrfs-progs kitty git
 ```
 
+> 💡 `linux-firmware` — метапакет: он тянет набор прошивок по умолчанию (`linux-firmware-amdgpu`, `-intel`, `-nvidia`, `-realtek` и др.). Можно указать только нужные `linux-firmware-*`, но для первой установки надёжнее оставить метапакет.
+
 ### ⚙️ CPU-microcode
 
 Выбираем **один** пакет по производителю CPU:
@@ -221,7 +230,7 @@ base base-devel linux-zen linux-zen-headers linux-firmware vim networkmanager bt
 
 ### 🎮 GPU-драйверы
 
-Выбираем **один** набор по производителю видеокарты:
+Выбираем набор по производителю видеокарты (на гибридном ноутбуке — два, см. ниже):
 
 <details>
 <summary><b>🟢 NVIDIA</b> (Turing 16xx / RTX 20xx и новее — от 2018 года)</summary>
@@ -230,9 +239,38 @@ base base-devel linux-zen linux-zen-headers linux-firmware vim networkmanager bt
 nvidia-open-dkms nvidia-utils nvidia-settings libva-nvidia-driver
 ```
 
-- На ядре `linux-zen` нужен именно **DKMS**-вариант.
-- `nvidia-open-dkms` (открытые модули) — **обязательны для RTX 50xx Blackwell**, рекомендуются для всего, что новее Turing.
-- На старых картах **до Turing** — `nvidia-dkms` вместо `nvidia-open-dkms`.
+- На ядре `linux-zen` нужен именно **DKMS**-вариант (`nvidia-open` собран только под стандартное ядро `linux`).
+- `nvidia-open-dkms` (открытые модули) — вариант «for any kernel(s)» из официальных репозиториев. Подходит для всех карт от Turing до RTX 50xx Blackwell.
+- `nvidia-utils` подтянется и как зависимость, явное указание не мешает.
+- `libva-nvidia-driver` — прослойка VA-API поверх NVDEC (нужна, например, браузерам). По вики, с настройками по умолчанию она может потреблять **больше энергии**, чем декодирование на CPU. Обходной путь для драйвера 580.105.08 и новее — переменная окружения `CUDA_DISABLE_PERF_BOOST=1`.
+- Ноутбук Ampere с проблемами загрузки: вики описывает сбои GSP-прошивки на некоторых таких ноутбуках — тогда проприетарный `nvidia-580xx-dkms` (AUR) с параметром модуля `NVreg_EnableGpuFirmware=0`.
+
+</details>
+
+<details>
+<summary><b>🟢 NVIDIA</b> (до Turing: Maxwell / Pascal / Volta)</summary>
+
+Семейство карты определяем так (и сверяем с таблицей кодовых имён nouveau, ссылка есть в вики NVIDIA):
+
+```bash
+lspci -k -d ::03xx
+```
+
+С ветки 590 Pascal (GTX 10xx) и старше не поддерживаются основными пакетами: `nvidia-dkms` заменён на `nvidia-open-dkms`. Для Maxwell / Pascal / Volta нужен legacy-драйвер **`nvidia-580xx-dkms`** из **AUR** (статус в вики — *Legacy, supported*). Пакеты из AUR через `pacstrap` **не ставятся**.
+
+На этапе `pacstrap` вместо драйверов NVIDIA указываем:
+
+```
+mesa
+```
+
+Система загрузится на открытом драйвере `nouveau`. После установки AUR-хелпера:
+
+```bash
+yay -S nvidia-580xx-dkms
+```
+
+- Kepler — `nvidia-470xx-dkms` из AUR, статус *Legacy, unsupported*: NVIDIA эту ветку больше не поддерживает, и вики допускает, что проще остаться на `nouveau`.
 
 </details>
 
@@ -240,13 +278,13 @@ nvidia-open-dkms nvidia-utils nvidia-settings libva-nvidia-driver
 <summary><b>🔴 AMD</b></summary>
 
 ```
-mesa vulkan-radeon libva-mesa-driver
+mesa vulkan-radeon
 ```
 
 - Драйвер `amdgpu` входит в ядро — отдельный пакет не нужен.
-- `mesa` — OpenGL.
+- `mesa` — OpenGL + аппаратное декодирование видео через VA-API (отдельный `libva-mesa-driver` больше не нужен).
+- VDPAU удалён из драйверов mesa начиная с версии 25.3.0 — плееры и браузеры используют VA-API.
 - `vulkan-radeon` — Vulkan.
-- `libva-mesa-driver` — аппаратное декодирование видео через VA-API.
 
 </details>
 
@@ -257,6 +295,8 @@ mesa vulkan-radeon libva-mesa-driver
 mesa vulkan-intel intel-media-driver
 ```
 
+- `intel-media-driver` — аппаратное декодирование/кодирование видео через VA-API.
+
 </details>
 
 <details>
@@ -266,12 +306,16 @@ mesa vulkan-intel intel-media-driver
 mesa vulkan-intel libva-intel-driver
 ```
 
+- Полноценный Vulkan в `vulkan-intel` — с Broadwell; на более старых чипах поддержка неполная или отсутствует, так что пакет можно не ставить.
+
 </details>
+
+> 💡 **Гибридный ноутбук** (iGPU Intel/AMD + дискретная NVIDIA) — ставим **оба** набора: драйверы iGPU + драйверы NVIDIA. Подробности — статья вики «NVIDIA Optimus».
 
 ### 🚀 Готовые команды под типовые конфигурации
 
 <details>
-<summary><b>Intel CPU + NVIDIA GPU</b> (RTX 20xx и новее)</summary>
+<summary><b>Intel CPU + NVIDIA GPU</b> (GTX 16xx / RTX 20xx и новее)</summary>
 
 ```bash
 pacstrap /mnt base base-devel linux-zen linux-zen-headers linux-firmware vim networkmanager btrfs-progs kitty git intel-ucode nvidia-open-dkms nvidia-utils nvidia-settings libva-nvidia-driver
@@ -283,7 +327,7 @@ pacstrap /mnt base base-devel linux-zen linux-zen-headers linux-firmware vim net
 <summary><b>AMD CPU + AMD GPU</b></summary>
 
 ```bash
-pacstrap /mnt base base-devel linux-zen linux-zen-headers linux-firmware vim networkmanager btrfs-progs kitty git amd-ucode mesa vulkan-radeon libva-mesa-driver
+pacstrap /mnt base base-devel linux-zen linux-zen-headers linux-firmware vim networkmanager btrfs-progs kitty git amd-ucode mesa vulkan-radeon
 ```
 
 </details>
@@ -316,11 +360,17 @@ blkid   # проверка
 arch-chroot -S /mnt
 ```
 
-> 💡 Флаг **`-S`** (systemd mode) — обязателен с конца 2025 года. Без него `bootctl install` на [шаге 6](#6-загрузчик-systemd-boot) не запишет EFI-запись в NVRAM из-за регрессии systemd (выводит `Not booted with EFI`). С `-S` всё работает.
+> 💡 Флаг **`-S`** (systemd mode) — штатный способ входа в chroot для установки systemd-boot. Без него `bootctl install` на [шаге 6](#6-загрузчик-systemd-boot) скопирует файлы, но **не создаст EFI-запись** в NVRAM (выводит `Not booted with EFI or running in a container, skipping EFI variable modifications`): в обычном режиме `arch-chroot` работает в отдельном PID namespace, и `bootctl` намеренно не трогает EFI-переменные. Это поведение systemd, а не временный баг.
+>
+> ✅ Именно `arch-chroot -S /mnt` сейчас указан в официальном Installation guide.
+>
+> ⚠️ Если `arch-chroot` отвечает `invalid option` — образ устарел, скачай свежий ISO.
 
 ---
 
 ## 5. Настройка внутри chroot
+
+> 💡 Внутри chroot ты уже root — `sudo` не нужен (и пока не установлен, он ставится на [шаге 7](#7-создание-пользователя)).
 
 ### 🕰️ Локальное время
 
@@ -334,7 +384,7 @@ hwclock --systohc
 Открываем файл и **раскомментируем** нужные локали:
 
 ```bash
-sudo vim /etc/locale.gen
+vim /etc/locale.gen
 ```
 
 В моём случае:
@@ -345,7 +395,7 @@ sudo vim /etc/locale.gen
 Устанавливаем язык системы:
 
 ```bash
-sudo vim /etc/locale.conf
+vim /etc/locale.conf
 ```
 
 Добавляем строку:
@@ -363,7 +413,7 @@ locale-gen
 ### ⌨️ Русский язык в терминале (tty)
 
 ```bash
-sudo vim /etc/vconsole.conf
+vim /etc/vconsole.conf
 ```
 
 ```
@@ -376,23 +426,23 @@ FONT=cyr-sun16
 **Имя ПК:**
 
 ```bash
-sudo vim /etc/hostname
+vim /etc/hostname
 ```
 
 ```
-ArchLinux
+archlinux
 ```
 
 **hosts:**
 
 ```bash
-sudo vim /etc/hosts
+vim /etc/hosts
 ```
 
 ```
 127.0.0.1  localhost
 ::1        localhost
-127.0.1.1  ArchLinux
+127.0.1.1  archlinux
 ```
 
 ### 🔑 Пароль root
@@ -410,6 +460,22 @@ systemctl enable NetworkManager
 systemctl mask NetworkManager-wait-online
 ```
 
+### 🔄 Пересборка initramfs
+
+```bash
+mkinitcpio -P
+```
+
+> 💡 Initramfs был собран ещё во время `pacstrap`, когда `/etc/vconsole.conf` не существовало. Installation guide прямо говорит: если меняли раскладку консоли, initramfs нужно пересоздать.
+>
+> ✅ Микрокод: в выводе должна быть строка `-> Early uncompressed CPIO image generation successful`. Проверить, что он попал в образ:
+>
+> ```bash
+> lsinitcpio --early /boot/initramfs-linux-zen.img | grep microcode
+> ```
+>
+> Должны появиться `kernel/x86/microcode/` и `GenuineIntel.bin` или `AuthenticAMD.bin` (см. [шаг 6](#6-загрузчик-systemd-boot)).
+
 ---
 
 ## 6. Загрузчик systemd-boot
@@ -420,12 +486,16 @@ systemctl mask NetworkManager-wait-online
 bootctl install
 ```
 
-> 💡 Команда сработает только если на [шаге 4](#4-установка-базовой-системы) ты зашёл в chroot через `arch-chroot -S /mnt`. В обычном `arch-chroot /mnt` `bootctl` выведет `Not booted with EFI` и не запишет загрузочную запись.
+> 💡 Команда сработает только если на [шаге 4](#4-установка-базовой-системы) ты зашёл в chroot через `arch-chroot -S /mnt`. В обычном `arch-chroot /mnt` bootctl выведет `Not booted with EFI` и не запишет загрузочную запись.
+>
+> ✅ Проверка: в выводе должна появиться созданная запись UEFI **«Linux Boot Manager»**. После настройки конфигов ниже запусти `bootctl` без аргументов — он покажет, сможет ли systemd-boot их разобрать, а `bootctl list` выведет записи загрузки.
+>
+> 🛠️ Если запись так и не создалась — вики описывает ручное создание через `efibootmgr` (пакет ставится отдельно).
 
 ### Основной конфиг
 
 ```bash
-sudo vim /boot/loader/loader.conf
+vim /boot/loader/loader.conf
 ```
 
 ```
@@ -435,99 +505,90 @@ console-mode auto
 editor no
 ```
 
+> 💡 С `timeout 0` меню не показывается и сразу грузится запись по умолчанию. Если меню нужно — поставь, например, `timeout 3` (в меню клавишами `t` / `T` таймаут можно менять, `e` — правка параметров, `h` — подсказка).
+
 ### Запись о ядре
 
 ```bash
-sudo vim /boot/loader/entries/linux-zen.conf
+vim /boot/loader/entries/linux-zen.conf
 ```
 
-**Шаблон:**
+Шаблон:
 
 ```
 title   linux-zen
 linux   /vmlinuz-linux-zen
-initrd  /<microcode>.img
 initrd  /initramfs-linux-zen.img
 options root="LABEL=ArchLinux" rw rootflags=subvol=@ nowatchdog loglevel=6 rootfstype=btrfs <GPU-параметры>
 ```
 
-### CPU-microcode (строка `initrd`)
+### CPU-microcode (строка initrd)
 
-| CPU | `initrd` |
-|---|---|
-| **Intel** | `initrd  /intel-ucode.img` |
-| **AMD** | `initrd  /amd-ucode.img` |
+Отдельная строка `initrd /intel-ucode.img` / `initrd /amd-ucode.img` **больше не нужна**: хук `microcode` в mkinitcpio встраивает микрокод прямо в `initramfs-linux-zen.img`.
 
-### GPU-параметры (строка `options`)
+- Пакет `intel-ucode` / `amd-ucode` из [шага 4](#4-установка-базовой-системы) всё равно **нужен** — хук берёт микрокод из него.
+- Проверь, что в `/etc/mkinitcpio.conf` в строке `HOOKS` есть `microcode` после `autodetect` (в стандартном конфиге он уже есть).
+
+### GPU-параметры (строка options)
 
 | GPU | Параметр |
 |---|---|
-| **NVIDIA** | `nvidia-drm.modeset=1` — **обязательно** для Wayland-сессий (без него Hyprland/Sway не стартуют) |
+| **NVIDIA** (`nvidia-open-dkms`) | — (`nvidia-drm.modeset=1` и `nvidia-drm.fbdev=1` включены по умолчанию в `nvidia-utils`) |
+| **NVIDIA** (legacy `nvidia-580xx-dkms` из AUR) | `nvidia-drm.modeset=1` — на всякий случай: по умолчанию его включает пакет `nvidia-utils`, а для AUR-пакета это не гарантировано; без modeset Wayland не работает |
 | **AMD** | — (драйвер `amdgpu` грузится автоматически) |
-| **Intel** | — (драйвер `i915` грузится автоматически) |
+| **Intel** | — (драйвер `i915` / `xe` грузится автоматически) |
 
-> 💡 На драйвере NVIDIA 545+ можно дополнительно добавить `nvidia-drm.fbdev=1` для нативного KMS-фреймбуфера.
+> 💡 Проверка после загрузки (обе команды должны вывести `Y`):
+>
+> ```bash
+> cat /sys/module/nvidia_drm/parameters/modeset
+> cat /sys/module/nvidia_drm/parameters/fbdev
+> ```
+>
+> Если `fbdev` выводит `N` — добавь в `options` ещё и `nvidia-drm.fbdev=1`.
 
 ### Готовые конфиги под типовые конфигурации
 
-<details>
-<summary><b>Intel CPU + NVIDIA GPU</b></summary>
+Для **Intel CPU + NVIDIA GPU**, **AMD CPU + AMD GPU** и **Intel CPU + Intel iGPU** запись теперь одинаковая:
 
 ```
 title   linux-zen
 linux   /vmlinuz-linux-zen
-initrd  /intel-ucode.img
-initrd  /initramfs-linux-zen.img
-options root="LABEL=ArchLinux" rw rootflags=subvol=@ nowatchdog loglevel=6 rootfstype=btrfs nvidia-drm.modeset=1
-```
-
-</details>
-
-<details>
-<summary><b>AMD CPU + AMD GPU</b></summary>
-
-```
-title   linux-zen
-linux   /vmlinuz-linux-zen
-initrd  /amd-ucode.img
 initrd  /initramfs-linux-zen.img
 options root="LABEL=ArchLinux" rw rootflags=subvol=@ nowatchdog loglevel=6 rootfstype=btrfs
 ```
 
-</details>
-
-<details>
-<summary><b>Intel CPU + Intel iGPU</b></summary>
-
-```
-title   linux-zen
-linux   /vmlinuz-linux-zen
-initrd  /intel-ucode.img
-initrd  /initramfs-linux-zen.img
-options root="LABEL=ArchLinux" rw rootflags=subvol=@ nowatchdog loglevel=6 rootfstype=btrfs
-```
-
-</details>
+> 💡 Для legacy NVIDIA (`nvidia-580xx-dkms`) добавь в конец строки `options` параметр `nvidia-drm.modeset=1`.
 
 ---
 
 ## 7. Создание пользователя
 
-Выходим из chroot и перезагружаемся:
+Выходим из chroot, размонтируем разделы и перезагружаемся:
 
 ```bash
-# выход из chroot — Ctrl+D
+exit            # или Ctrl+D — выход из chroot
+umount -R /mnt
 reboot
 ```
+
+> 💡 `umount -R /mnt` не обязателен, но рекомендован установочным руководством: так видно, если какой-то раздел ещё занят.
 
 После перезагрузки **логинимся под `root`** и создаём пользователя:
 
 ```bash
 useradd -m <имя_пользователя>
 passwd <имя_пользователя>
-usermod -aG wheel,audio,video,optical,storage <имя_пользователя>
+usermod -aG wheel <имя_пользователя>
 userdbctl groups-of-user <имя_пользователя>
 ```
+
+> 💡 Достаточно группы `wheel` (для `sudo`; кроме того, polkit по умолчанию считает членов `wheel` администраторами). Группы `audio`, `video`, `optical`, `storage` в вики — «Pre-systemd groups»: сейчас udev помечает устройства тегом `uaccess`, а `logind` выдаёт права активной сессии через ACL. Добавление в них может даже ломать функции: группа `audio` ломает быстрое переключение пользователей и позволяет приложениям блокировать программное микширование.
+>
+> Исключения, когда группа всё-таки нужна:
+> - `audio` — ALSA/OSS в удалённых сессиях;
+> - `storage` — работа с некоторыми устройствами через `udisksctl`;
+> - `video` — некоторые утилиты яркости (например, `light`) требуют членства в `video`.
 
 ### Устанавливаем sudo
 
