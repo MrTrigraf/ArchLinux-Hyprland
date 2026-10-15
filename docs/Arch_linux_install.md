@@ -208,7 +208,7 @@ mount /dev/<EFI-System> /mnt/boot
 Команда `pacstrap` собирается из **трёх частей**:
 
 ```
-pacstrap /mnt  <базовый набор>  <CPU-microcode>  <GPU-драйверы>
+pacstrap -K /mnt  <базовый набор>  <CPU-microcode>  <GPU-драйверы>
 ```
 
 ### 🧩 Базовый набор (общий для всех конфигураций)
@@ -243,7 +243,7 @@ nvidia-open-dkms nvidia-utils nvidia-settings libva-nvidia-driver
 - `nvidia-open-dkms` (открытые модули) — вариант «for any kernel(s)» из официальных репозиториев. Подходит для всех карт от Turing до RTX 50xx Blackwell.
 - `nvidia-utils` подтянется и как зависимость, явное указание не мешает.
 - `libva-nvidia-driver` — прослойка VA-API поверх NVDEC (нужна, например, браузерам). По вики, с настройками по умолчанию она может потреблять **больше энергии**, чем декодирование на CPU. Обходной путь для драйвера 580.105.08 и новее — переменная окружения `CUDA_DISABLE_PERF_BOOST=1`.
-- Ноутбук Ampere с проблемами загрузки: вики описывает сбои GSP-прошивки на некоторых таких ноутбуках — тогда проприетарный `nvidia-580xx-dkms` (AUR) с параметром модуля `NVreg_EnableGpuFirmware=0`.
+- GSP-прошивка: по вики, она вызывает проблемы — от неоптимального энергопотребления на Turing до полного отказа на некоторых ноутбуках с Ampere. Если это твой случай — проприетарный `nvidia-580xx-dkms` (AUR) с параметром модуля `NVreg_EnableGpuFirmware=0` ([вики NVIDIA](https://wiki.archlinux.org/title/NVIDIA#Installation)).
 
 </details>
 
@@ -318,7 +318,7 @@ mesa vulkan-intel libva-intel-driver
 <summary><b>Intel CPU + NVIDIA GPU</b> (GTX 16xx / RTX 20xx и новее)</summary>
 
 ```bash
-pacstrap /mnt base base-devel linux-zen linux-zen-headers linux-firmware vim networkmanager btrfs-progs kitty git intel-ucode nvidia-open-dkms nvidia-utils nvidia-settings libva-nvidia-driver
+pacstrap -K /mnt base base-devel linux-zen linux-zen-headers linux-firmware vim networkmanager btrfs-progs kitty git intel-ucode nvidia-open-dkms nvidia-utils nvidia-settings libva-nvidia-driver
 ```
 
 </details>
@@ -327,7 +327,7 @@ pacstrap /mnt base base-devel linux-zen linux-zen-headers linux-firmware vim net
 <summary><b>AMD CPU + AMD GPU</b></summary>
 
 ```bash
-pacstrap /mnt base base-devel linux-zen linux-zen-headers linux-firmware vim networkmanager btrfs-progs kitty git amd-ucode mesa vulkan-radeon
+pacstrap -K /mnt base base-devel linux-zen linux-zen-headers linux-firmware vim networkmanager btrfs-progs kitty git amd-ucode mesa vulkan-radeon
 ```
 
 </details>
@@ -336,7 +336,7 @@ pacstrap /mnt base base-devel linux-zen linux-zen-headers linux-firmware vim net
 <summary><b>Intel CPU + Intel iGPU</b> (Broadwell+)</summary>
 
 ```bash
-pacstrap /mnt base base-devel linux-zen linux-zen-headers linux-firmware vim networkmanager btrfs-progs kitty git intel-ucode mesa vulkan-intel intel-media-driver
+pacstrap -K /mnt base base-devel linux-zen linux-zen-headers linux-firmware vim networkmanager btrfs-progs kitty git intel-ucode mesa vulkan-intel intel-media-driver
 ```
 
 </details>
@@ -346,6 +346,14 @@ pacstrap /mnt base base-devel linux-zen linux-zen-headers linux-firmware vim net
 ```bash
 genfstab -U /mnt >> /mnt/etc/fstab
 ```
+
+Проверяем результат и при ошибках исправляем ([Installation guide](https://wiki.archlinux.org/title/Installation_guide#Fstab)):
+
+```bash
+cat /mnt/etc/fstab
+```
+
+> 💡 Должны быть строки для `/` (`subvol=/@`), `/home` (`subvol=/@home`), `/boot` и `swap`.
 
 ### Метка системного диска
 
@@ -459,6 +467,18 @@ passwd
 systemctl enable NetworkManager
 systemctl mask NetworkManager-wait-online
 ```
+
+### 🟢 Только NVIDIA (`nvidia-open-dkms`): убрать `kms` из `HOOKS` (опционально)
+
+```bash
+vim /etc/mkinitcpio.conf
+```
+
+В строке `HOOKS=(...)` удаляем слово `kms`. Пересборка — следующей командой `mkinitcpio -P`.
+
+> 💡 Шаг необязательный: `nvidia-utils` и так блокирует `nouveau`. Без хука `kms` модуль `nouveau` не попадёт в initramfs, и ядро гарантированно не загрузит его на раннем этапе ([вики NVIDIA](https://wiki.archlinux.org/title/NVIDIA#Installation)).
+>
+> ⚠️ Для legacy `nvidia-580xx-dkms` этот шаг делаем **после** установки драйвера из AUR: до этого система работает на `nouveau`. После правки — `sudo mkinitcpio -P`.
 
 ### 🔄 Пересборка initramfs
 

@@ -211,7 +211,7 @@ mount /dev/<EFI-System-partition> /mnt/boot
 The `pacstrap` command consists of **three parts**:
 
 ```
-pacstrap /mnt  <base set>  <CPU-microcode>  <GPU drivers>
+pacstrap -K /mnt  <base set>  <CPU-microcode>  <GPU drivers>
 ```
 
 ### 🧩 Base set (common for all configurations)
@@ -246,7 +246,7 @@ nvidia-open-dkms nvidia-utils nvidia-settings libva-nvidia-driver
 - `nvidia-open-dkms` (open modules) — the "for any kernel(s)" variant from the official repositories. Suitable for all cards from Turing up to RTX 50xx Blackwell.
 - `nvidia-utils` is also pulled in as a dependency; listing it explicitly does no harm.
 - `libva-nvidia-driver` — a VA-API layer on top of NVDEC (needed by browsers, for example). According to the wiki, with default settings it may consume **more power** than CPU decoding. Workaround for driver 580.105.08 and newer: the `CUDA_DISABLE_PERF_BOOST=1` environment variable.
-- Ampere laptop with boot problems: the wiki describes GSP firmware failures on some of these laptops — in that case use the proprietary `nvidia-580xx-dkms` (AUR) with the `NVreg_EnableGpuFirmware=0` module parameter.
+- GSP firmware: according to the wiki, it causes issues ranging from suboptimal power management on Turing to complete failure on some Ampere laptops. If this is your case — use the proprietary `nvidia-580xx-dkms` (AUR) with the `NVreg_EnableGpuFirmware=0` module parameter ([NVIDIA wiki](https://wiki.archlinux.org/title/NVIDIA#Installation)).
 
 </details>
 
@@ -321,7 +321,7 @@ mesa vulkan-intel libva-intel-driver
 <summary><b>Intel CPU + NVIDIA GPU</b> (GTX 16xx / RTX 20xx and newer)</summary>
 
 ```bash
-pacstrap /mnt base base-devel linux-zen linux-zen-headers linux-firmware vim networkmanager btrfs-progs kitty git intel-ucode nvidia-open-dkms nvidia-utils nvidia-settings libva-nvidia-driver
+pacstrap -K /mnt base base-devel linux-zen linux-zen-headers linux-firmware vim networkmanager btrfs-progs kitty git intel-ucode nvidia-open-dkms nvidia-utils nvidia-settings libva-nvidia-driver
 ```
 
 </details>
@@ -330,7 +330,7 @@ pacstrap /mnt base base-devel linux-zen linux-zen-headers linux-firmware vim net
 <summary><b>AMD CPU + AMD GPU</b></summary>
 
 ```bash
-pacstrap /mnt base base-devel linux-zen linux-zen-headers linux-firmware vim networkmanager btrfs-progs kitty git amd-ucode mesa vulkan-radeon
+pacstrap -K /mnt base base-devel linux-zen linux-zen-headers linux-firmware vim networkmanager btrfs-progs kitty git amd-ucode mesa vulkan-radeon
 ```
 
 </details>
@@ -339,7 +339,7 @@ pacstrap /mnt base base-devel linux-zen linux-zen-headers linux-firmware vim net
 <summary><b>Intel CPU + Intel iGPU</b> (Broadwell+)</summary>
 
 ```bash
-pacstrap /mnt base base-devel linux-zen linux-zen-headers linux-firmware vim networkmanager btrfs-progs kitty git intel-ucode mesa vulkan-intel intel-media-driver
+pacstrap -K /mnt base base-devel linux-zen linux-zen-headers linux-firmware vim networkmanager btrfs-progs kitty git intel-ucode mesa vulkan-intel intel-media-driver
 ```
 
 </details>
@@ -349,6 +349,14 @@ pacstrap /mnt base base-devel linux-zen linux-zen-headers linux-firmware vim net
 ```bash
 genfstab -U /mnt >> /mnt/etc/fstab
 ```
+
+Check the result and fix it in case of errors ([Installation guide](https://wiki.archlinux.org/title/Installation_guide#Fstab)):
+
+```bash
+cat /mnt/etc/fstab
+```
+
+> 💡 There should be entries for `/` (`subvol=/@`), `/home` (`subvol=/@home`), `/boot` and `swap`.
 
 ### Label the system disk
 
@@ -462,6 +470,18 @@ passwd
 systemctl enable NetworkManager
 systemctl mask NetworkManager-wait-online
 ```
+
+### 🟢 NVIDIA only (`nvidia-open-dkms`): remove `kms` from `HOOKS` (optional)
+
+```bash
+vim /etc/mkinitcpio.conf
+```
+
+In the `HOOKS=(...)` line, delete the word `kms`. The rebuild is done by the next command, `mkinitcpio -P`.
+
+> 💡 This step is optional: `nvidia-utils` already blacklists `nouveau`. Without the `kms` hook, the `nouveau` module does not get into the initramfs, so the kernel is guaranteed not to load it during early boot ([NVIDIA wiki](https://wiki.archlinux.org/title/NVIDIA#Installation)).
+>
+> ⚠️ For legacy `nvidia-580xx-dkms`, do this step **after** installing the driver from the AUR: until then the system runs on `nouveau`. After the edit — `sudo mkinitcpio -P`.
 
 ### 🔄 Rebuild the initramfs
 
