@@ -168,15 +168,13 @@ umount /mnt -R
 
 **Корень:**
 ```bash
-mount -o rw,noatime,compress=zstd:3,ssd,ssd_spread,discard=async,space_cache=v2,subvol=/@ \
-    /dev/<раздел-с-Linux-filesystem> /mnt
+mount -o rw,noatime,compress=zstd:3,ssd,discard=async,space_cache=v2,subvol=/@ /dev/<раздел-с-Linux-filesystem> /mnt
 ```
 
 **Папка home:**
 ```bash
 mkdir /mnt/home
-mount -o rw,noatime,compress=zstd:3,ssd,ssd_spread,discard=async,space_cache=v2,subvol=/@home \
-    /dev/<раздел-с-Linux-filesystem> /mnt/home
+mount -o rw,noatime,compress=zstd:3,ssd,discard=async,space_cache=v2,subvol=/@home /dev/<раздел-с-Linux-filesystem> /mnt/home
 ```
 
 **Проверка:**

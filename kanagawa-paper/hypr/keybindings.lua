@@ -60,6 +60,7 @@ hl.bind(mainMod .. " + V",          hl.dsp.window.float({ action = "toggle" })) 
 hl.bind(mainMod .. " + P",          hl.dsp.window.pseudo()) --переключение в маленький размер
 hl.bind(mainMod .. " + SHIFT + J",  hl.dsp.layout("togglesplit")) --переключение сплита
 hl.bind(mainMod .. " + SHIFT + R",  hl.dsp.exit())
+hl.bind("XF86AudioMicMute",         hl.dsp.exec_cmd("sh -c 'wpctl set-mute @DEFAULT_AUDIO_SOURCE@ toggle && if wpctl get-volume @DEFAULT_AUDIO_SOURCE@ | grep -q MUTED; then brightnessctl -d platform::micmutw set 1; else brightnessctl -d platform::micmute set 0; fi'"), { locked = true })
 ---- focus ----
 hl.bind(mainMod .. " + H",          hl.dsp.focus({ direction = "left" }))
 hl.bind(mainMod .. " + L",          hl.dsp.focus({ direction = "right" }))

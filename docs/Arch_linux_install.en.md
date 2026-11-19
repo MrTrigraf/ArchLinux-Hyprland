@@ -171,15 +171,13 @@ umount /mnt -R
 
 **Root:**
 ```bash
-mount -o rw,noatime,compress=zstd:3,ssd,ssd_spread,discard=async,space_cache=v2,subvol=/@ \
-    /dev/<linux-filesystem-partition> /mnt
+mount -o rw,noatime,compress=zstd:3,ssd,discard=async,space_cache=v2,subvol=/@ /dev/<linux-filesystem-partition> /mnt
 ```
 
 **home folder:**
 ```bash
 mkdir /mnt/home
-mount -o rw,noatime,compress=zstd:3,ssd,ssd_spread,discard=async,space_cache=v2,subvol=/@home \
-    /dev/<linux-filesystem-partition> /mnt/home
+mount -o rw,noatime,compress=zstd:3,ssd,discard=async,space_cache=v2,subvol=/@home /dev/<linux-filesystem-partition> /mnt/home
 ```
 
 **Verify:**
