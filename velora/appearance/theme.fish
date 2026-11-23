@@ -25,6 +25,20 @@ set -g VELORA_ROOT (path dirname (path dirname $script))
 set -g THEME_ROOT $VELORA_ROOT/themes
 set -g THEME_LINK $THEME_ROOT/current
 
+# Производные файлы: _theme_set откатывает их при сбое генератора.
+# Новый генератор добавляет свой выходной файл сюда.
+# hypr/wallpaper.lua — генератора пока нет; файл может отсутствовать.
+set -g THEME_DERIVED_FILES \
+    $VELORA_ROOT/hypr/theme.lua \
+    $VELORA_ROOT/hypr/wallpaper.lua \
+    $VELORA_ROOT/rofi/colors.rasi \
+    $VELORA_ROOT/hyprlock/theme.colors \
+    $VELORA_ROOT/cmus/current.theme \
+    $VELORA_ROOT/appearance/gtk/gtk-3.0/gtk.css \
+    $VELORA_ROOT/appearance/gtk/gtk-4.0/gtk.css \
+    $VELORA_ROOT/appearance/qt/qt5ct/colors/velora.conf \
+    $VELORA_ROOT/appearance/qt/qt6ct/colors/velora.conf
+
 if not test -d $THEME_ROOT
     echo "Ошибка: нет папки тем $THEME_ROOT" >&2
     exit 1
@@ -146,6 +160,63 @@ function _theme_list
     end
 end
 
+# ── Транзакция переключения темы ─────────────────────────
+
+# _theme_snapshot <папка> — копирует существующие производные файлы в <папка>/files/N
+function _theme_snapshot
+    set -l dir $argv[1]
+    mkdir -p -- $dir/files
+    or return 1
+
+    for i in (seq (count $THEME_DERIVED_FILES))
+        set -l file $THEME_DERIVED_FILES[$i]
+        if test -f $file
+            cp -p -- $file $dir/files/$i
+            or return 1
+        end
+    end
+    return 0
+end
+
+# _theme_restore <папка> [старая_цель] — возвращает симлинк и производные файлы.
+# Файл, которого не было в снимке, удаляется. Возвращает 1 при любом сбое.
+function _theme_restore
+    set -l dir $argv[1]
+    set -l old_target $argv[2]
+    set -l failed 0
+
+    if test -n "$old_target"
+        set -l tmp $THEME_LINK.restore.$fish_pid
+        if not ln -s -- $old_target $tmp; or not mv -Tf -- $tmp $THEME_LINK
+            rm -f -- $tmp
+            set failed 1
+        end
+    else
+        rm -f -- $THEME_LINK
+        or set failed 1
+    end
+
+    for i in (seq (count $THEME_DERIVED_FILES))
+        set -l file $THEME_DERIVED_FILES[$i]
+        if test -f $dir/files/$i
+            cp -p -- $dir/files/$i $file
+            or set failed 1
+        else
+            rm -f -- $file
+            or set failed 1
+        end
+    end
+
+    return $failed
+end
+
+# _theme_cleanup <папка> — удаляет только временный каталог velora-theme.*
+function _theme_cleanup
+    if string match -q -- '*/velora-theme.*' "$argv[1]"
+        rm -rf -- $argv[1]
+    end
+end
+
 function _theme_set
     set -l name $argv[1]
     if test -z "$name"
@@ -162,20 +233,50 @@ function _theme_set
         return 1
     end
 
-    # Атомарная замена: новый симлинк под временным именем, затем mv -T
-    set -l tmp $THEME_LINK.new.$fish_pid
-    if not ln -s -- $name $tmp
-        echo "Ошибка: не удалось создать симлинк $tmp" >&2
+    set -l old_target
+    if test -L $THEME_LINK
+        set old_target (readlink -- $THEME_LINK)
+    end
+
+    set -l snapshot (mktemp -d --tmpdir velora-theme.XXXXXX)
+    if test -z "$snapshot"
+        echo "Ошибка: не удалось создать временный каталог" >&2
         return 1
     end
-    if not mv -Tf -- $tmp $THEME_LINK
+    if not _theme_snapshot $snapshot
+        _theme_cleanup $snapshot
+        echo "Ошибка: не удалось сохранить производные файлы" >&2
+        return 1
+    end
+
+    # Атомарная замена: новый симлинк под временным именем, затем mv -T
+    set -l tmp $THEME_LINK.new.$fish_pid
+    if not ln -s -- $name $tmp; or not mv -Tf -- $tmp $THEME_LINK
         rm -f -- $tmp
+        _theme_cleanup $snapshot
         echo "Ошибка: не удалось заменить симлинк $THEME_LINK" >&2
         return 1
     end
 
+    echo "Переключаю тему: $name"
+    if not _theme_generate $name
+        echo "Ошибка: генерация не удалась, откат к прежней теме" >&2
+        if not _theme_restore $snapshot $old_target
+            echo "Критическая ошибка: откат не удался, снимок: $snapshot" >&2
+            return 1
+        end
+        _theme_cleanup $snapshot
+        if test -n "$old_target"
+            echo "Тема возвращена: $old_target" >&2
+        else
+            echo "Активной темы нет, симлинк удалён" >&2
+        end
+        return 1
+    end
+
+    _theme_cleanup $snapshot
     echo "Активна тема: $name"
-    _theme_generate $name
+    return 0
 end
 
 # Генерация производных файлов: проверяет и заново разбирает тему,
