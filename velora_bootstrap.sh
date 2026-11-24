@@ -149,27 +149,7 @@ PACMAN_PKGS=(
 
 sudo pacman -S --needed --noconfirm "${PACMAN_PKGS[@]}"
 
-# === 2a. Пакеты по производителю GPU ===
-# Драйверы ставятся по всем найденным видеокартам. На гибриде
-# ставятся оба набора; переменные окружения выбирает gpu_env в fish.
-read -ra GPUS <<< "$(detect_gpus || true)"
-GPU_PKGS=()
-for gpu in "${GPUS[@]}"; do
-  case "$gpu" in
-    amd)    GPU_PKGS+=(vulkan-radeon libva-mesa-driver) ;;
-    intel)  GPU_PKGS+=(vulkan-intel intel-media-driver) ;;
-    nvidia) GPU_PKGS+=(nvidia-open-dkms nvidia-utils libva-nvidia-driver) ;;
-  esac
-done
-
-if [ ${#GPU_PKGS[@]} -gt 0 ]; then
-  echo "[detect] GPU: ${GPUS[*]} — ставлю ${GPU_PKGS[*]}"
-  sudo pacman -S --needed --noconfirm "${GPU_PKGS[@]}"
-else
-  echo "[detect] GPU не определён — драйверы не ставлю"
-fi
-
-# === 2b. Пакеты по модулям железа ===
+# === 2a. Пакеты по модулям железа ===
 # Батарея → power-profiles-daemon (управление CPU-профилями через ACPI).
 if has_battery; then
   echo "[detect] батарея обнаружена — ставлю power-profiles-daemon"
