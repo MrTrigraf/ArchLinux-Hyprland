@@ -124,7 +124,7 @@ function _theme_write
     set -l tmp $target.new.$fish_pid
 
     printf '%s\n' $argv[2..-1] >$tmp
-    and mv -f -- $tmp $target
+    and mv -Tf -- $tmp $target
     and return 0
 
     rm -f -- $tmp

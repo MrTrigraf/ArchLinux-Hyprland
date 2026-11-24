@@ -1,0 +1,4 @@
+# Тема cmus: ~/.config/cmus/velora.theme — симлинк на velora/cmus/current.theme.
+# Файл current.theme генерирует команда theme set. rc читается после autosave,
+# поэтому тема применяется при каждом запуске (man cmus, CONFIGURATION).
+colorscheme velora

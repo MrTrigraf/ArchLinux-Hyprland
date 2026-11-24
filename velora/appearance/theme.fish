@@ -24,6 +24,7 @@ end
 set -g VELORA_ROOT (path dirname (path dirname $script))
 set -g THEME_ROOT $VELORA_ROOT/themes
 set -g THEME_LINK $THEME_ROOT/current
+set -g THEME_SCRIPT $script
 
 # Производные файлы: _theme_set откатывает их при сбое генератора.
 # Новый генератор добавляет свой выходной файл сюда.
@@ -33,7 +34,9 @@ set -g THEME_DERIVED_FILES \
     $VELORA_ROOT/hypr/wallpaper.lua \
     $VELORA_ROOT/rofi/colors.rasi \
     $VELORA_ROOT/hyprlock/theme.colors \
+    $VELORA_ROOT/hyprlock/wallpaper.conf \
     $VELORA_ROOT/cmus/current.theme \
+    $VELORA_ROOT/btop/themes/velora.theme \
     $VELORA_ROOT/appearance/gtk/gtk-3.0/gtk.css \
     $VELORA_ROOT/appearance/gtk/gtk-4.0/gtk.css \
     $VELORA_ROOT/appearance/qt/qt5ct/colors/velora.conf \
@@ -276,6 +279,24 @@ function _theme_set
 
     _theme_cleanup $snapshot
     echo "Активна тема: $name"
+    _theme_reload_live
+    return 0
+end
+
+# _theme_reload_live — перечитывает конфиги запущенных программ, которые
+# умеют это без перезапуска. Процессы не завершаются.
+#   kitty: SIGUSR1 перечитывает kitty.conf вместе с include
+#          (sw.kovidgoyal.net/kitty/conf: «sending kitty the SIGUSR1 signal»).
+#   Hyprland: сам перечитывает hyprland.lua и theme.lua при изменении файлов.
+#   GTK 4: gtk.css читается один раз при старте приложения (gtk/gtksettings.c),
+#          поэтому запущенные приложения получат тему после перезапуска.
+# Сбой здесь не меняет результат theme set: тема уже применена.
+function _theme_reload_live
+    if command -q pkill
+        pkill -USR1 -x kitty
+        or true
+    end
+    echo "GTK-приложения применят тему после перезапуска"
     return 0
 end
 
@@ -312,6 +333,35 @@ function _theme_generate
     echo "Сгенерированы производные файлы (тема: $name)"
 end
 
+# _theme_set_locked <имя> — выполняет theme set под блокировкой flock.
+# Две одновременные смены иначе перезаписывают общие файлы и симлинк друг
+# друга. Схема как в omarchy-theme-set: файл блокировки в $XDG_RUNTIME_DIR.
+# Вторая смена ждёт до 60 с. Внутри блокировки скрипт запускает сам себя
+# с VELORA_THEME_LOCKED=1, чтобы не взять блокировку повторно.
+function _theme_set_locked
+    if set -q VELORA_THEME_LOCKED
+        _theme_set $argv[1]
+        return $status
+    end
+    if not command -q flock
+        echo "Предупреждение: flock не найден, смена темы без блокировки" >&2
+        _theme_set $argv[1]
+        return $status
+    end
+
+    set -l dir /tmp
+    if test -n "$XDG_RUNTIME_DIR"
+        set dir $XDG_RUNTIME_DIR
+    end
+    flock -w 60 -E 75 $dir/velora-theme-set.lock \
+        env VELORA_THEME_LOCKED=1 fish $THEME_SCRIPT set $argv[1]
+    set -l rc $status
+    if test $rc -eq 75
+        echo "Ошибка: другая смена темы не завершилась за 60 с" >&2
+    end
+    return $rc
+end
+
 # ── Диспетчер ────────────────────────────────────────────
 
 function _theme_usage
@@ -330,7 +380,7 @@ function _theme_main
         case current
             _theme_current
         case set
-            _theme_set $argv[2]
+            _theme_set_locked $argv[2]
         case check
             set -l name $argv[2]
             if test -z "$name"

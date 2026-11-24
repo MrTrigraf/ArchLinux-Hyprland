@@ -1,5 +1,5 @@
 kanagawa-paper/fish/fish_variables
-hypridle.conf
+/hypridle.conf
 opencode.json
 velora/rofi/colors.rasi
 velora/hyprlock/theme.colors
@@ -9,3 +9,8 @@ velora/appearance/qt/qt5ct/colors/velora.conf
 velora/appearance/qt/qt6ct/colors/velora.conf
 velora/hypr/theme.lua
 velora/cmus/current.theme
+velora/btop/themes/velora.theme
+velora/hyprlock/wallpaper.conf
+velora/fish/fish_variables
+velora/hypr/monitors.lua
+velora/themes/current

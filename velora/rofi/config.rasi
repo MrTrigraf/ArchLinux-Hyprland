@@ -1,0 +1,57 @@
+/*
+ * config.rasi — главный конфиг rofi
+ * ──────────────────────────────────
+ * Грузится через флаг -config из биндинга SUPER+R в keybindings.lua.
+ * Здесь — поведение лаунчера и параметры modi.
+ * Вид и палитра — theme.rasi и colors.rasi соответственно.
+ */
+
+configuration {
+    /* ── Активные modi (порядок = порядок кнопок mode-switcher) ───
+     * drun    — запуск .desktop-приложений
+     * files   — наш скрипт file-opener.sh
+     * ssh     — встроенный rofi-modi, читает ~/.ssh/config
+     *           и ~/.ssh/known_hosts. Выбор хоста → запуск ssh
+     *           в `terminal` (см. ниже). */
+    modes:                  "drun,files:~/.config/hypr/velora/rofi/scripts/file-opener.sh,ssh";
+
+    /* ── Подписи на кнопках mode-switcher ─────────────────────
+     * Plain text без глифов и без <span>: rofi 2.0.0 ломает
+     * icon-fetcher на mode-switcher buttons (урок чата 16 в HANDOFF —
+     * целый чат потрачен, решения не нашли). markup на button
+     * в theme.rasi не задаём. */
+    display-drun:           "Apps";
+    display-files:          "Files";
+    display-ssh:            "SSH";
+
+    /* ── Иконки приложений в drun-листе ──────────────────────
+     * Это для строк ВНУТРИ списка drun, не для кнопок mode-switcher
+     * (где иконки сломаны, см. выше). Темa Papirus-Dark установлена
+     * в чате 16 темизации. */
+    show-icons:             true;
+    icon-theme:             "Papirus-Dark";
+
+    /* ── Формат отображаемой строки в drun ───────────────────
+     * "{name}" — только имя приложения, без "(generic name)" в скобках. */
+    drun-display-format:    "{name}";
+
+    /* ── Терминал для ssh modi ───────────────────────────────
+     * При выборе хоста в ssh modi rofi выполняет ssh-command,
+     * по умолчанию `{terminal} -e ssh {host}`. Без явного `terminal`
+     * вызывается `rofi-sensible-terminal`, который перебирает зоопарк
+     * эмуляторов и доходит до kitty где-то в конце списка. Явная
+     * установка — мгновенный запуск без перебора. */
+    terminal:               "kitty";
+
+    /* ── Поиск ─────────────────────────────────────────────── */
+    case-sensitive:         false;
+    sort:                   true;
+    sorting-method:         "fzf";
+}
+
+/* ── Подключение темы ─────────────────────────────────────── */
+/* @theme сбрасывает дефолтную тему и грузит нашу как полную.
+   theme.rasi уже @import colors.rasi внутри себя.
+   Относительный путь rofi ищет в папке этого файла (man rofi-theme,
+   «Multiple file handling»). colors.rasi генерирует команда theme set. */
+@theme "theme.rasi"
