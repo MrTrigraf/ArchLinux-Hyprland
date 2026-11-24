@@ -20,6 +20,9 @@
 #   v_fail      = color9  — неверный пароль
 #   v_caps      = color11 — рамка Caps Lock
 #   v_layout    = color12 — индикатор раскладки
+#
+# Второй файл — velora/hyprlock/wallpaper.conf:
+#   $v_wallpaper = <путь к обоям темы> (ключ ## wallpaper)
 # ============================================================
 
 function _gen_hyprlock
@@ -63,4 +66,27 @@ function _gen_hyprlock
         return 1
     end
     echo "  [hyprlock] $dir/theme.colors"
+
+    # wallpaper.conf — обои темы для экрана блокировки при входе.
+    # Путь идёт через симлинк themes/current: при генерации он уже
+    # указывает на новую тему. Знак # удваивается (комментарий hyprlang).
+    set -l wall (_theme_meta wallpaper)
+    set -l wall_path $THEME_LINK/wallpapers/$wall
+    if test -z "$wall"; or not test -f $wall_path
+        echo "Ошибка [hyprlock]: нет файла обоев '$wall_path'" >&2
+        return 1
+    end
+
+    set -l wall_lines
+    set -a wall_lines '# wallpaper.conf — сгенерирован командой theme set, править руками нельзя.'
+    set -a wall_lines '# Источник: ключ wallpaper в velora/themes/current/theme.conf'
+    set -a wall_lines ''
+    set -a wall_lines (printf '$v_wallpaper = %s' (string replace -a -- '#' '##' $wall_path))
+
+    _theme_write $dir/wallpaper.conf $wall_lines
+    or begin
+        echo "Ошибка [hyprlock]: не удалось записать $dir/wallpaper.conf" >&2
+        return 1
+    end
+    echo "  [hyprlock] $dir/wallpaper.conf"
 end

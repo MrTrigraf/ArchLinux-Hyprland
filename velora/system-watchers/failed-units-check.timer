@@ -1,0 +1,15 @@
+[Unit]
+Description=Periodic check for failed systemd units
+Documentation=https://github.com/<your-repo>
+
+[Timer]
+# Первый запуск — через 2 минуты после старта сессии (даёт юнитам
+# время загрузиться, чтобы не словить ложный failed на этапе boot).
+OnBootSec=2min
+# Дальше — каждые 5 минут после последнего запуска.
+OnUnitActiveSec=5min
+# Не догонять пропущенные срабатывания после suspend.
+Persistent=false
+
+[Install]
+WantedBy=timers.target

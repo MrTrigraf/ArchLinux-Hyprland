@@ -33,6 +33,7 @@ set -g THEME_DERIVED_FILES \
     $VELORA_ROOT/hypr/wallpaper.lua \
     $VELORA_ROOT/rofi/colors.rasi \
     $VELORA_ROOT/hyprlock/theme.colors \
+    $VELORA_ROOT/hyprlock/wallpaper.conf \
     $VELORA_ROOT/cmus/current.theme \
     $VELORA_ROOT/appearance/gtk/gtk-3.0/gtk.css \
     $VELORA_ROOT/appearance/gtk/gtk-4.0/gtk.css \

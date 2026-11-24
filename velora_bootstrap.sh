@@ -8,6 +8,35 @@ if [ "$EUID" -eq 0 ]; then
   exit 1
 fi
 
+VELORA_DIR="$HOME/.config/hypr/velora"
+STAMP="$(date +%Y%m%d-%H%M%S)"
+
+# Проверка, что репозиторий развёрнут в ~/.config/hypr/ до запуска.
+for dir in fish starship hypridle cmus appearance system-watchers; do
+  if [ ! -d "$VELORA_DIR/$dir" ]; then
+    echo "Ошибка: нет $VELORA_DIR/$dir"
+    echo "Разверните репозиторий в ~/.config/hypr/ до запуска bootstrap."
+    exit 1
+  fi
+done
+
+# link_safe <цель> <ссылка> — создаёт симлинк.
+# Существующий обычный файл или папка переносится в <ссылка>.bak.<дата>.
+# Старый симлинк заменяется без бэкапа: он хранит только путь.
+link_safe() {
+  local target="$1"
+  local link="$2"
+
+  if [ -L "$link" ]; then
+    rm -f "$link"
+  elif [ -e "$link" ]; then
+    mv "$link" "$link.bak.$STAMP"
+    echo "  [бэкап] $link -> $link.bak.$STAMP"
+  fi
+  mkdir -p "$(dirname "$link")"
+  ln -s "$target" "$link"
+}
+
 # ============================================================
 # Определение железа по модулям.
 # Возвращают 0 (есть) или 1 (нет), либо печатают результат.
@@ -61,6 +90,9 @@ sudo pacman -Syu --noconfirm
 
 # === 2. Пакеты из официальных репозиториев ===
 PACMAN_PKGS=(
+  # Сборка (нужно для makepkg и yay)
+  base-devel
+
   # Hyprland + инфраструктура
   hyprland hyprlock hyprshot hypridle polkit hyprpolkitagent
   xdg-desktop-portal-hyprland xdg-desktop-portal-gtk
@@ -116,6 +148,26 @@ PACMAN_PKGS=(
 )
 
 sudo pacman -S --needed --noconfirm "${PACMAN_PKGS[@]}"
+
+# === 2a. Пакеты по производителю GPU ===
+# Драйверы ставятся по всем найденным видеокартам. На гибриде
+# ставятся оба набора; переменные окружения выбирает gpu_env в fish.
+read -ra GPUS <<< "$(detect_gpus || true)"
+GPU_PKGS=()
+for gpu in "${GPUS[@]}"; do
+  case "$gpu" in
+    amd)    GPU_PKGS+=(vulkan-radeon libva-mesa-driver) ;;
+    intel)  GPU_PKGS+=(vulkan-intel intel-media-driver) ;;
+    nvidia) GPU_PKGS+=(nvidia-open-dkms nvidia-utils libva-nvidia-driver) ;;
+  esac
+done
+
+if [ ${#GPU_PKGS[@]} -gt 0 ]; then
+  echo "[detect] GPU: ${GPUS[*]} — ставлю ${GPU_PKGS[*]}"
+  sudo pacman -S --needed --noconfirm "${GPU_PKGS[@]}"
+else
+  echo "[detect] GPU не определён — драйверы не ставлю"
+fi
 
 # === 2b. Пакеты по модулям железа ===
 # Батарея → power-profiles-daemon (управление CPU-профилями через ACPI).
@@ -199,7 +251,7 @@ fix_hyprlock_pam() {
   fi
 
   echo "  [pam] дополняю $pam_file"
-  sudo cp "$pam_file" "$pam_file.bak.$(date +%Y%m%d-%H%M%S)"
+  sudo cp "$pam_file" "$pam_file.bak.$STAMP"
   sudo tee "$pam_file" > /dev/null <<'PAMEOF'
 #%PAM-1.0
 auth      include   login
@@ -226,7 +278,7 @@ ensure_faillock_deny0() {
     return 0
   fi
 
-  sudo cp "$f" "$f.bak.$(date +%Y%m%d-%H%M%S)"
+  sudo cp "$f" "$f.bak.$STAMP"
 
   if grep -qE '^[[:space:]]*#?[[:space:]]*deny[[:space:]]*=' "$f"; then
     sudo sed -i -E 's/^[[:space:]]*#?[[:space:]]*deny[[:space:]]*=.*/deny = 0/' "$f"
@@ -245,60 +297,53 @@ ensure_faillock_deny0
 # скрипте это повесит выполнение. От root chsh меняет оболочку без запроса.
 sudo chsh -s /usr/bin/fish "$USER"
 
-# === 8. Симлинки fish, starship, hypridle ===
-# Создаём ДО первого запуска fish: иначе fish создаст свою папку
+# === 8. Генерация производных файлов темы ===
+# Нужна до симлинков: cmus, GTK и Qt ссылаются на сгенерированные файлы.
+# Команда theme set откатывает изменения при сбое генератора.
+THEME_SCRIPT="$VELORA_DIR/appearance/theme.fish"
+DEFAULT_THEME="kanagawa-paper"
+
+fish "$THEME_SCRIPT" set "$DEFAULT_THEME"
+
+# === 9. Симлинки fish, starship, hypridle ===
+# Проверка до замены: пустой или битый fish-конфиг не должен занять место.
+if [ ! -f "$VELORA_DIR/fish/config.fish" ]; then
+  echo "Ошибка: нет $VELORA_DIR/fish/config.fish, пропускаю замену ~/.config/fish"
+  exit 1
+fi
+
+# Симлинк создаётся ДО первого запуска fish: иначе fish создаст свою папку
 # и симлинк ляжет рекурсивно.
-[ -e ~/.config/fish ] && rm -rf ~/.config/fish
-ln -s ~/.config/hypr/velora/fish ~/.config/fish
+link_safe "$VELORA_DIR/fish" ~/.config/fish
+link_safe "$VELORA_DIR/starship/starship.toml" ~/.config/starship.toml
+link_safe "velora/hypridle/hypridle.conf" ~/.config/hypr/hypridle.conf
 
-[ -e ~/.config/starship.toml ] && rm -f ~/.config/starship.toml
-ln -s ~/.config/hypr/velora/starship/starship.toml ~/.config/starship.toml
-
-[ -e ~/.config/hypr/hypridle.conf ] && rm -f ~/.config/hypr/hypridle.conf
-ln -s velora/hypridle/hypridle.conf ~/.config/hypr/hypridle.conf
-
-# === 8b. Симлинки cmus (тема + rc) ===
+# === 9b. Симлинки cmus (тема + rc) ===
 # Симлинкуем ОТДЕЛЬНЫЕ ФАЙЛЫ, не папку целиком: cmus пишет в неё
 # runtime-данные (autosave, lib.pl, playlists) — это состояние, не тема.
-CMUS_DIR="$HOME/.config/hypr/velora/cmus"
-
-if [ ! -d "$CMUS_DIR" ]; then
-  echo "  [cmus] $CMUS_DIR не найден"
-  echo "  [cmus] Разверните репозиторий в ~/.config/hypr/ до запуска bootstrap"
-  exit 1
-fi
+# cmus ищет тему по имени в ~/.config/cmus: velora.theme → current.theme.
+CMUS_DIR="$VELORA_DIR/cmus"
 
 mkdir -p ~/.config/cmus
-ln -sfn "$CMUS_DIR/kanagawa-paper.theme" ~/.config/cmus/kanagawa-paper.theme
-ln -sfn "$CMUS_DIR/rc"                   ~/.config/cmus/rc
+link_safe "$CMUS_DIR/current.theme" ~/.config/cmus/velora.theme
+link_safe "$CMUS_DIR/rc" ~/.config/cmus/rc
 
-# === 9. Симлинки темизации + цвет папок Papirus ===
+# === 10. Симлинки темизации + цвет папок Papirus ===
 # Симлинкуем КАЖДЫЙ файл отдельно: в ~/.config/gtk-3.0/ может лежать
 # чужой bookmarks, а симлинк папки на папку даёт грабли colors/colors/.
-THEMING_DIR="$HOME/.config/hypr/velora/appearance"
+THEMING_DIR="$VELORA_DIR/appearance"
 
-if [ ! -d "$THEMING_DIR" ]; then
-  echo "  [appearance] $THEMING_DIR не найден"
-  echo "  [appearance] Разверните репозиторий в ~/.config/hypr/ до запуска bootstrap"
-  exit 1
-fi
+link_safe "$THEMING_DIR/gtk/gtk-3.0/gtk.css"      ~/.config/gtk-3.0/gtk.css
+link_safe "$THEMING_DIR/gtk/gtk-3.0/settings.ini" ~/.config/gtk-3.0/settings.ini
+link_safe "$THEMING_DIR/gtk/gtk-4.0/gtk.css"      ~/.config/gtk-4.0/gtk.css
+link_safe "$THEMING_DIR/gtk/gtk-4.0/settings.ini" ~/.config/gtk-4.0/settings.ini
 
-mkdir -p ~/.config/gtk-3.0 ~/.config/gtk-4.0 \
-         ~/.config/qt5ct/colors ~/.config/qt6ct/colors \
-         ~/.icons
+link_safe "$THEMING_DIR/cursor/default" ~/.icons/default
 
-ln -sfn "$THEMING_DIR/gtk-3.0/gtk.css"      ~/.config/gtk-3.0/gtk.css
-ln -sfn "$THEMING_DIR/gtk-3.0/settings.ini" ~/.config/gtk-3.0/settings.ini
-ln -sfn "$THEMING_DIR/gtk-4.0/gtk.css"      ~/.config/gtk-4.0/gtk.css
-ln -sfn "$THEMING_DIR/gtk-4.0/settings.ini" ~/.config/gtk-4.0/settings.ini
-
-[ -e ~/.icons/default ] && rm -rf ~/.icons/default
-ln -sfn "$THEMING_DIR/cursor/default" ~/.icons/default
-
-ln -sfn "$THEMING_DIR/qt/qt5ct/qt5ct.conf"         ~/.config/qt5ct/qt5ct.conf
-ln -sfn "$THEMING_DIR/qt/qt5ct/colors/current.conf" ~/.config/qt5ct/colors/current.conf
-ln -sfn "$THEMING_DIR/qt/qt6ct/qt6ct.conf"         ~/.config/qt6ct/qt6ct.conf
-ln -sfn "$THEMING_DIR/qt/qt6ct/colors/current.conf" ~/.config/qt6ct/colors/current.conf
+link_safe "$THEMING_DIR/qt/qt5ct/qt5ct.conf"             ~/.config/qt5ct/qt5ct.conf
+link_safe "$THEMING_DIR/qt/qt5ct/colors/velora.conf"     ~/.config/qt5ct/colors/velora.conf
+link_safe "$THEMING_DIR/qt/qt6ct/qt6ct.conf"             ~/.config/qt6ct/qt6ct.conf
+link_safe "$THEMING_DIR/qt/qt6ct/colors/velora.conf"     ~/.config/qt6ct/colors/velora.conf
 
 if command -v papirus-folders &>/dev/null; then
   echo "  [papirus] устанавливаю цвет папок: paleorange"
@@ -307,27 +352,25 @@ else
   echo "  [papirus] утилита не найдена, пропускаю смену цвета"
 fi
 
-# === 10. System-watchers (упавшие systemd-юниты) ===
+# === 11. System-watchers (упавшие systemd-юниты) ===
 # Симлинкуем service+timer в ~/.config/systemd/user (обязательный путь,
 # переопределить нельзя), перезагружаем systemd и активируем таймер.
 # Таймер раз в 5 минут собирает `systemctl --failed` (system + user scope).
 # При появлении новых упавших юнитов шлёт notify-send с urgency=critical.
-SYSWATCH_DIR="$HOME/.config/hypr/velora/system-watchers"
-
-if [ ! -d "$SYSWATCH_DIR" ]; then
-  echo "  [system-watchers] $SYSWATCH_DIR не найден"
-  echo "  [system-watchers] Разверните репозиторий в ~/.config/hypr/ до запуска bootstrap"
-  exit 1
-fi
+SYSWATCH_DIR="$VELORA_DIR/system-watchers"
 
 # Скрипт должен быть исполняемым (на случай, если git не сохранил +x).
 chmod +x "$SYSWATCH_DIR/failed-units-check.fish"
 
-mkdir -p ~/.config/systemd/user
-
-ln -sfn "$SYSWATCH_DIR/failed-units-check.service" ~/.config/systemd/user/failed-units-check.service
-ln -sfn "$SYSWATCH_DIR/failed-units-check.timer"   ~/.config/systemd/user/failed-units-check.timer
+link_safe "$SYSWATCH_DIR/failed-units-check.service" ~/.config/systemd/user/failed-units-check.service
+link_safe "$SYSWATCH_DIR/failed-units-check.timer"   ~/.config/systemd/user/failed-units-check.timer
 
 systemctl --user daemon-reload
 systemctl --user enable --now failed-units-check.timer
 echo "  [system-watchers] failed-units-check.timer активирован"
+
+# === 12. Точка входа Hyprland ===
+# Не переключается автоматически: сначала проверка velora/hypr вручную.
+# Команда для ручного переключения (см. отчёт этапа 1):
+#   Hyprland --verify-config --config ~/.config/hypr/velora/hypr/hyprland.lua
+echo "=== Готово. Точка входа ~/.config/hypr/hyprland.lua не изменена. ==="
