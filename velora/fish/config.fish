@@ -31,8 +31,13 @@ set -gx fish_color_option          bryellow
 # === Интерактивные настройки ===
 if status is-interactive
     #fastfetch
+    # Цвет ключей и значков — акцент текущей темы (## accent = colorN, по умолчанию color4).
+    # Формат @N — цвет N палитры терминала (fastfetch 2.57+), поэтому цвет следует палитре kitty.
     function fastfetch --wraps='fastfetch'
-      command fastfetch --config ~/.config/hypr/velora/fastfetch/config.jsonc $argv
+      set -l accent 4
+      set -l m (string match -r -- '^##\s*accent\s*=\s*color(\d+)\s*$' < ~/.config/hypr/velora/themes/current/theme.conf 2>/dev/null)
+      test -n "$m[2]"; and set accent $m[2]
+      command fastfetch --config ~/.config/hypr/velora/fastfetch/config.jsonc --color-keys @$accent $argv
     end
 
     # Отключить дефолтный fish-greeting (логотип fish)

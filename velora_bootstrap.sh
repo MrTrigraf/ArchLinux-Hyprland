@@ -308,6 +308,11 @@ mkdir -p ~/.config/cmus
 link_safe "$CMUS_DIR/current.theme" ~/.config/cmus/velora.theme
 link_safe "$CMUS_DIR/rc" ~/.config/cmus/rc
 
+# === 9c. Симлинк btop ===
+# btop ищет темы в "$HOME/.config/btop/themes", поэтому симлинкуется папка
+# целиком: btop дописывает свои настройки в btop.conf при выходе.
+link_safe "$VELORA_DIR/btop" ~/.config/btop
+
 # === 10. Симлинки темизации + цвет папок Papirus ===
 # Симлинкуем КАЖДЫЙ файл отдельно: в ~/.config/gtk-3.0/ может лежать
 # чужой bookmarks, а симлинк папки на папку даёт грабли colors/colors/.

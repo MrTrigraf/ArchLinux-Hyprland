@@ -46,7 +46,7 @@ hl.on("hyprland.start", function ()
 end)
 
 ---------------
----- LAYOT ----
+---- LAYOUT ----
 ---------------
 
 hl.config({
