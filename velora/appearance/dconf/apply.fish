@@ -15,7 +15,7 @@ set -l settings \
     "cursor-size:24" \
     "font-name:Adwaita Sans 11" \
     "document-font-name:Adwaita Sans 12" \
-    "monospace-font-name:JetBrainsMono Nerd Font 12"
+    "monospace-font-name:JetBrains Mono 12"
 
 set -l errors 0
 for pair in $settings

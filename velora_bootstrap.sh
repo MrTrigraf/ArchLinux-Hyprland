@@ -90,9 +90,6 @@ sudo pacman -Syu --noconfirm
 
 # === 2. Пакеты из официальных репозиториев ===
 PACMAN_PKGS=(
-  # Сборка (нужно для makepkg и yay)
-  base-devel
-
   # Hyprland + инфраструктура
   hyprland hyprlock hyprshot hypridle polkit hyprpolkitagent
   xdg-desktop-portal-hyprland xdg-desktop-portal-gtk
@@ -102,7 +99,11 @@ PACMAN_PKGS=(
   awww
 
   # Шрифты
-  noto-fonts noto-fonts-emoji ttf-jetbrains-mono-nerd
+  # ttf-jetbrains-mono — текст и код; значки Nerd идут отдельным шрифтом
+  # ttf-nerd-fonts-symbols, он подключается правилом fontconfig.
+  noto-fonts noto-fonts-cjk noto-fonts-emoji
+  ttf-jetbrains-mono ttf-nerd-fonts-symbols ttf-nerd-fonts-symbols-common
+  ttf-liberation ttf-dejavu adwaita-fonts gsfonts xorg-fonts-misc
 
   # Аудио
   pipewire pipewire-pulse pipewire-jack wireplumber pavucontrol playerctl
@@ -111,7 +112,7 @@ PACMAN_PKGS=(
   fish starship lsd
 
   # CLI-утилиты
-  git less fastfetch btop wl-clipboard
+  less fastfetch btop wl-clipboard
 
   # Панель и лаунчер
   quickshell rofi
@@ -329,6 +330,15 @@ link_safe "$THEMING_DIR/qt/qt5ct/qt5ct.conf"             ~/.config/qt5ct/qt5ct.c
 link_safe "$THEMING_DIR/qt/qt5ct/colors/velora.conf"     ~/.config/qt5ct/colors/velora.conf
 link_safe "$THEMING_DIR/qt/qt6ct/qt6ct.conf"             ~/.config/qt6ct/qt6ct.conf
 link_safe "$THEMING_DIR/qt/qt6ct/colors/velora.conf"     ~/.config/qt6ct/colors/velora.conf
+
+# === 10б. Симлинк fontconfig ===
+# Исходный конфиг, не производный файл темы: задаёт sans-serif, serif,
+# monospace, CJK-правила и подстановку Symbols Nerd Font для значков.
+link_safe "$THEMING_DIR/fontconfig/fonts.conf" ~/.config/fontconfig/fonts.conf
+
+# Кэш шрифтов пересобирается после установки пакетов и нового конфига.
+fc-cache -f
+echo "  [fonts] кэш fontconfig пересобран"
 
 if command -v papirus-folders &>/dev/null; then
   echo "  [papirus] устанавливаю цвет папок: paleorange"

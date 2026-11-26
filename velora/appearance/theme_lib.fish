@@ -41,6 +41,24 @@ function _theme_parse
     # Допустимые ключи метаданных; неизвестный ключ — ошибка, а не пропуск
     set -l meta_keys name variant accent nvim wallpaper
 
+    # Именованные цветовые ключи kitty.
+    # Источник: /usr/share/doc/kitty/kitty.conf, раздел Color scheme.
+    # color0..color255 проверяются отдельно.
+    set -l color_keys \
+        background foreground \
+        selection_background selection_foreground \
+        cursor cursor_text_color cursor_trail_color \
+        url_color visual_bell_color \
+        active_border_color inactive_border_color bell_border_color \
+        window_title_bar_active_foreground window_title_bar_active_background \
+        window_title_bar_inactive_foreground window_title_bar_inactive_background \
+        tab_bar_background tab_bar_margin_color \
+        active_tab_background active_tab_foreground \
+        inactive_tab_background inactive_tab_foreground \
+        mark1_foreground mark1_background \
+        mark2_foreground mark2_background \
+        mark3_foreground mark3_background
+
     for line in (cat $conf)
         set line (string trim -- $line)
         if test -z "$line"
@@ -62,10 +80,23 @@ function _theme_parse
         else
             # Цвет: <ключ> #RRGGBB
             set -l m (string match -r -- '^(\w+)\s+(#[0-9a-fA-F]{6})$' $line)
-            if test (count $m) -eq 3
-                set -g THEME_COLOR_$m[2] $m[3]
-            else
+            if test (count $m) -ne 3
                 echo "Ошибка: нераспознана строка в $conf: $line" >&2
+                return 1
+            end
+
+            set -l key $m[2]
+            set -l num (string match -r -- '^color(0|[1-9][0-9]{0,2})$' $key)
+            if contains -- $key $color_keys
+                set -g THEME_COLOR_$key $m[3]
+            else if test (count $num) -eq 2
+                if test "$num[2]" -gt 255
+                    echo "Ошибка: номер цвета вне диапазона 0–255 в $conf: $line" >&2
+                    return 1
+                end
+                set -g THEME_COLOR_$key $m[3]
+            else
+                echo "Ошибка: неизвестный ключ цвета в $conf: $line" >&2
                 return 1
             end
         end

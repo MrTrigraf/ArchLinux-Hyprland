@@ -29,7 +29,7 @@
 
 /* ── Глобальные дефолты для всех виджетов ─────────────────── */
 * {
-    font:               "JetBrainsMono Nerd Font 13";
+    font:               "JetBrains Mono 13";
     background-color:   transparent;
     text-color:         @fg;
 
